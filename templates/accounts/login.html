@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowMe — Kirish</title>
+    <meta name="description" content="ShadowMe platformasiga kirish. Shadow method yordamida Koreys va Ingliz tillarini o'rganing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.07);
+            --accent-1: #7c3aed;
+            --accent-2: #4f46e5;
+            --accent-3: #06b6d4;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #475569;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(124, 58, 237, 0.6);
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --input-size: 56px;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* ── Animated Background ── */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124, 58, 237, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 40% at 20% 70%, rgba(79, 70, 229, 0.08) 0%, transparent 50%);
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+        }
+
+        /* ── Floating Orbs ── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: float 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: rgba(124, 58, 237, 0.12);
+            top: -100px; left: -100px;
+            animation-delay: 0s;
+        }
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: rgba(6, 182, 212, 0.08);
+            bottom: -50px; right: -50px;
+            animation-delay: 3s;
+        }
+        .orb-3 {
+            width: 200px; height: 200px;
+            background: rgba(79, 70, 229, 0.1);
+            top: 50%; right: 10%;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* ── Header / Navbar ── */
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5%;height:68px;
+            display:flex;align-items:center;justify-content:space-between;
+            backdrop-filter:blur(20px) saturate(180%);background:rgba(10,10,15,.6);
+            border-bottom:1px solid var(--border);transition:background .3s}
+        .navbar.scrolled{background:rgba(10,10,15,.93)}
+        .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+        .nav-logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent-1),var(--accent-3));border-radius:10px;
+            display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;
+            box-shadow:0 4px 16px rgba(124,58,237,.4)}
+        .nav-logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px;
+            background:linear-gradient(135deg,#a78bfa,#7c3aed,#06b6d4);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .nav-links{display:flex;align-items:center;gap:4px;list-style:none}
+        .nav-links a{padding:8px 14px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-secondary);transition:all .2s;text-decoration:none;}
+        .nav-links a:hover{color:var(--text-primary);background:var(--bg-card)}
+        .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+        .hamburger span{display:block;width:24px;height:2px;background:var(--text-secondary);border-radius:2px;transition:all .3s}
+        .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+        .hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+        .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+        .mobile-nav{display:none;position:fixed;top:68px;left:0;right:0;z-index:99;
+            background:rgba(10,10,15,.97);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);
+            padding:20px 5% 28px;flex-direction:column;gap:4px;animation:slide-down .25s ease}
+        @keyframes slide-down{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .mobile-nav.open{display:flex}
+        .mobile-nav a{padding:12px 16px;border-radius:12px;font-size:15px;font-weight:500;color:var(--text-secondary);transition:all .2s;text-decoration:none;}
+        .mobile-nav a:hover{background:var(--bg-card);color:var(--text-primary)}
+
+
+        /* ── Main Content ── */
+        .main {
+            position: relative;
+            z-index: 5;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 108px 20px 40px 20px; /* Menudan ajratish uchun yuqoridan joy */
+        }
+
+        /* ── Login Card ── */
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            backdrop-filter: blur(20px);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 32px 64px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(124, 58, 237, 0.05);
+            animation: card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes card-in {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ── Logo in card ── */
+        .card-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .card-logo-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #06b6d4 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(124, 58, 237, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-logo-icon::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+        }
+
+        .card-logo-icon svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        /* ── Bot instruction ── */
+        .bot-instruction {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            padding: 12px 16px;
+            background: rgba(124, 58, 237, 0.08);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            flex-wrap: wrap;
+            text-align: center;
+            line-height: 1.5;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .bot-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #a78bfa;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .bot-link:hover {
+            color: #c4b5fd;
+        }
+
+        .bot-link svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* ── OTP Inputs ── */
+        .otp-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .otp-input {
+            width: var(--input-size);
+            height: var(--input-size);
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            font-family: 'Inter', monospace;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            caret-color: transparent;
+            -moz-appearance: textfield;
+        }
+
+        .otp-input::-webkit-outer-spin-button,
+        .otp-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .otp-input:focus {
+            border-color: var(--accent-1);
+            background: rgba(124, 58, 237, 0.08);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2), 0 4px 16px rgba(124, 58, 237, 0.1);
+            transform: translateY(-2px) scale(1.04);
+        }
+
+        .otp-input.filled {
+            border-color: rgba(124, 58, 237, 0.5);
+            background: rgba(124, 58, 237, 0.06);
+            color: #c4b5fd;
+        }
+
+        .otp-input.success {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.08);
+            color: #6ee7b7;
+        }
+
+        .otp-input.error-state {
+            border-color: var(--error);
+            background: rgba(239, 68, 68, 0.08);
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        /* ── Submit Button ── */
+        .submit-btn {
+            width: 100%;
+            padding: 15px 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.2px;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+            transition: opacity 0.2s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-btn.loading {
+            pointer-events: none;
+        }
+
+        .btn-text { transition: opacity 0.2s ease; }
+        .btn-spinner {
+            display: none;
+            position: absolute;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+        }
+        .submit-btn.loading .btn-text { opacity: 0; }
+        .submit-btn.loading .btn-spinner { display: flex; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        /* ── Status Message ── */
+        .status-msg {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+            animation: fade-in 0.3s ease;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-msg.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            display: block;
+        }
+
+        .status-msg.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            display: block;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            position: relative;
+            z-index: 5;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover { color: var(--text-primary); }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 28px 0;
+        }
+
+        .trust-badges {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .badge svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+            opacity: 0.7;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+        }
+        @media (max-width: 480px) {
+            .login-card { padding: 36px 24px; }
+            :root { --input-size: 48px; }
+            .otp-input { font-size: 20px; }
+            .otp-inputs { gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background layers -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- ══════════════ NAVBAR ══════════════ -->
+    <nav class="navbar" id="navbar">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">S</div>
+        <span class="nav-logo-text">ShadowMe</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/#how">Qanday ishlaydi</a></li>
+        <li><a href="/#features">Imkoniyatlar</a></li>
+        <li><a href="/#pricing">Narxlar</a></li>
+        <li><a href="/#team">Jamoa</a></li>
+        <li><a href="/#reviews">Fikrlar</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menyu">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+
+    <div class="mobile-nav" id="mobileNav">
+      <a href="/#how"      class="mobile-link">Qanday ishlaydi</a>
+      <a href="/#features" class="mobile-link">Imkoniyatlar</a>
+      <a href="/#pricing"  class="mobile-link">Narxlar</a>
+      <a href="/#team"     class="mobile-link">Jamoa</a>
+      <a href="/#reviews"  class="mobile-link">Fikrlar</a>
+    </div>
+
+    <!-- Main -->
+    <main class="main">
+        <div class="login-card">
+
+            <!-- Logo -->
+            <div class="card-logo">
+                <div class="card-logo-icon">
+                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="18" cy="14" r="6" stroke="white" stroke-width="2.5" fill="none"/>
+                        <path d="M11 14c0 3.9 3.1 7 7 7s7-3.1 7-7" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <line x1="18" y1="21" x2="18" y2="27" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="13" y1="27" x2="23" y2="27" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h1 class="card-title">Kodni kiriting</h1>
+            </div>
+
+            <!-- Bot instruction -->
+            <div class="bot-instruction">
+                <a href="https://t.me/{{ bot_username }}" target="_blank" rel="noopener" class="bot-link">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.01 9.476c-.149.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 14.4 4.297 13.5c-.645-.202-.658-.645.136-.953l10.876-4.194c.537-.194 1.007.131.833.895z"/>
+                    </svg>
+                    @{{ bot_username }}
+                </a>
+                <span>ga yozing va 1 daqiqalik OTP kodni oling</span>
+            </div>
+
+            <!-- OTP form -->
+            <form id="otpForm" novalidate>
+                {% csrf_token %}
+                <label class="otp-label" for="otp-1">OTP kodini kiriting</label>
+                
+                <div class="otp-inputs" id="otpInputs" role="group" aria-label="6 xonali OTP kodi">
+                    <input class="otp-input" type="number" id="otp-1" name="otp-1" 
+                           maxlength="1" min="0" max="9" autocomplete="off"
+                           aria-label="OTP 1-raqam" placeholder="·">
+                    <input class="otp-input" type="number" id="otp-2" name="otp-2"
+                           maxlength="1" min="0" max="9" autocomplete="off"
+                           aria-label="OTP 2-raqam" placeholder="·">
+                    <input class="otp-input" type="number" id="otp-3" name="otp-3"
+                           maxlength="1" min="0" max="9" autocomplete="off"
+                           aria-label="OTP 3-raqam" placeholder="·">
+                    <input class="otp-input" type="number" id="otp-4" name="otp-4"
+                           maxlength="1" min="0" max="9" autocomplete="off"
+                           aria-label="OTP 4-raqam" placeholder="·">
+                    <input class="otp-input" type="number" id="otp-5" name="otp-5"
+                           maxlength="1" min="0" max="9" autocomplete="off"
+                           aria-label="OTP 5-raqam" placeholder="·">
+                    <input class="otp-input" type="number" id="otp-6" name="otp-6"
+                           maxlength="1" min="0" max="9" autocomplete="off"
+                           aria-label="OTP 6-raqam" placeholder="·">
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                    <span class="btn-text">Kirish</span>
+                    <span class="btn-spinner"><span class="spinner-circle"></span></span>
+                </button>
+
+                <div class="status-msg" id="statusMsg" role="alert" aria-live="polite"></div>
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="trust-badges">
+                <span class="badge">
+                    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                    Xavfsiz
+                </span>
+                <span class="badge">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    Shadow Method
+                </span>
+                <span class="badge">
+                    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+                    Telegram OTP
+                </span>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2024 ShadowMe.uz — Shadow method yordamida til o'rganish platformasi</p>
+    </footer>
+
+    <script>
+    (function() {
+        'use strict';
+
+        /* Navbar scroll */
+        const navbar = document.getElementById('navbar');
+        if (navbar) {
+            window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', scrollY > 30); }, { passive: true });
+        }
+
+        /* Hamburger */
+        const hbg = document.getElementById('hamburger');
+        const mnav = document.getElementById('mobileNav');
+        if (hbg && mnav) {
+            hbg.addEventListener('click', () => {
+                const open = !mnav.classList.contains('open');
+                mnav.classList.toggle('open', open);
+                hbg.classList.toggle('open', open);
+                document.body.style.overflow = open ? 'hidden' : '';
+            });
+            document.querySelectorAll('.mobile-link').forEach(a => {
+                a.addEventListener('click', () => { mnav.classList.remove('open'); hbg.classList.remove('open'); document.body.style.overflow = ''; });
+            });
+        }
+
+        const inputs = Array.from(document.querySelectorAll('.otp-input'));
+        const submitBtn = document.getElementById('submitBtn');
+        const form = document.getElementById('otpForm');
+        const statusMsg = document.getElementById('statusMsg');
+        const redirectUrl = "{{ redirect }}";
+
+        // ── OTP Input Logic ──────────────────────────────────────────────
+
+        function getOTPValue() {
+            return inputs.map(i => i.value).join('');
+        }
+
+        function isComplete() {
+            return getOTPValue().length === 6;
+        }
+
+        function updateSubmitBtn() {
+            submitBtn.disabled = !isComplete();
+        }
+
+        function markFilled(input) {
+            input.classList.toggle('filled', input.value.length > 0);
+        }
+
+        function setAllState(state) {
+            inputs.forEach(i => {
+                i.classList.remove('success', 'error-state', 'filled');
+                if (state) i.classList.add(state);
+            });
+        }
+
+        function showStatus(message, type) {
+            statusMsg.textContent = message;
+            statusMsg.className = 'status-msg ' + type;
+        }
+
+        function hideStatus() {
+            statusMsg.className = 'status-msg';
+        }
+
+        // Focus first input on load
+        inputs[0].focus();
+
+        inputs.forEach((input, index) => {
+            // Only allow single digit
+            input.addEventListener('input', (e) => {
+                let val = input.value.replace(/\D/g, '');
+                
+                // Handle paste of multiple digits
+                if (val.length > 1) {
+                    const digits = val.split('');
+                    digits.forEach((d, i) => {
+                        if (inputs[index + i]) {
+                            inputs[index + i].value = d;
+                            markFilled(inputs[index + i]);
+                        }
+                    });
+                    const nextIndex = Math.min(index + digits.length, inputs.length - 1);
+                    inputs[nextIndex].focus();
+                } else {
+                    input.value = val;
+                    markFilled(input);
+                    if (val && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                }
+                
+                updateSubmitBtn();
+                hideStatus();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (!input.value && index > 0) {
+                        inputs[index - 1].value = '';
+                        markFilled(inputs[index - 1]);
+                        inputs[index - 1].focus();
+                        updateSubmitBtn();
+                    }
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    inputs[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                } else if (e.key === 'Enter' && isComplete()) {
+                    form.requestSubmit();
+                }
+            });
+
+            // Prevent non-digit keys
+            input.addEventListener('keypress', (e) => {
+                if (!/\d/.test(e.key)) e.preventDefault();
+            });
+
+            // Select all on focus
+            input.addEventListener('focus', () => {
+                input.select();
+            });
+        });
+
+        // Handle paste on any input
+        document.getElementById('otpInputs').addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData)
+                .getData('text')
+                .replace(/\D/g, '')
+                .slice(0, 6);
+            
+            if (pasted) {
+                pasted.split('').forEach((d, i) => {
+                    if (inputs[i]) {
+                        inputs[i].value = d;
+                        markFilled(inputs[i]);
+                    }
+                });
+                const lastIdx = Math.min(pasted.length - 1, inputs.length - 1);
+                inputs[lastIdx].focus();
+                updateSubmitBtn();
+            }
+        });
+
+        // ── Form Submit ──────────────────────────────────────────────────
+
+        let lockoutTimer = null;
+
+        function startLockoutCountdown(seconds) {
+            // Form va inputlarni o'chirish
+            submitBtn.disabled = true;
+            inputs.forEach(i => { i.disabled = true; i.classList.add('error-state'); });
+
+            let remaining = seconds;
+
+            function tick() {
+                const m = Math.floor(remaining / 60);
+                const s = remaining % 60;
+                const timeStr = m > 0 ? `${m}:${String(s).padStart(2,'0')}` : `${s}s`;
+                showStatus(
+                    `🔒 Bloklandingiz — ${timeStr} dan keyin qayta urinib ko'ring.`,
+                    'error'
+                );
+                if (remaining <= 0) {
+                    // Lockout tugadi — formni qayta yoqish
+                    inputs.forEach(i => {
+                        i.disabled = false;
+                        i.value = '';
+                        i.classList.remove('error-state', 'filled');
+                    });
+                    hideStatus();
+                    updateSubmitBtn();
+                    inputs[0].focus();
+                    clearInterval(lockoutTimer);
+                    lockoutTimer = null;
+                    return;
+                }
+                remaining--;
+            }
+            tick();
+            lockoutTimer = setInterval(tick, 1000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = getOTPValue();
+            if (otp.length !== 6) return;
+            if (lockoutTimer) return; // Lockout davomida bloklash
+
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            hideStatus();
+
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                const response = await fetch('/api/verify-otp/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ otp }),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 429) {
+                    // 🔒 Rate limit — lockout countdown
+                    setAllState('error-state');
+                    const retryAfter = data.retry_after || 900;
+                    startLockoutCountdown(retryAfter);
+                    return; // finally dan oldin chiqish
+
+                } else if (data.success) {
+                    // ✅ Muvaffaqiyatli
+                    setAllState('success');
+                    showStatus('✅ ' + data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect || redirectUrl || '/dashboard/';
+                    }, 900);
+
+                } else {
+                    // ❌ Noto'g'ri OTP
+                    setAllState('error-state');
+                    showStatus('❌ ' + data.message, 'error');
+                    setTimeout(() => {
+                        inputs.forEach(i => {
+                            i.value = '';
+                            i.classList.remove('error-state', 'filled');
+                        });
+                        inputs[0].focus();
+                        updateSubmitBtn();
+                    }, 1200);
+                }
+
+            } catch (err) {
+                showStatus("❌ Server bilan aloqa o'rnatilmadi.", 'error');
+                setAllState('error-state');
+            } finally {
+                submitBtn.classList.remove('loading');
+                if (!lockoutTimer) updateSubmitBtn();
+            }
+        });
+
+    })();
+    
+    </script>
+</body>
+</html>

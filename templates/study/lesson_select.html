@@ -1,0 +1,105 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — Dars tanlash{% endblock %}
+
+{% block main_content %}
+<header class="page-header" style="margin-bottom: 24px;">
+    <div>
+        <h1 class="greeting" style="font-size: 28px;">{{ course.title }}</h1>
+        <p class="greeting-sub">Darsni tanlang va Shadow method bilan o'rganishni boshlang.</p>
+    </div>
+</header>
+
+<div class="glass-card">
+    <div class="card-title">
+        <span class="icon">����</span> Mavjud darslar
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        {% for lesson in lessons %}
+        <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.2s; cursor: pointer;" onclick="startLesson('{{ lesson.id }}')">
+            <div style="display: flex; align-items: flex-start; gap: 16px;">
+                <div style="width: 80px; height: 80px; border-radius: 12px; background: linear-gradient(135deg, var(--p1), var(--p3)); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0;">
+                    ���
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{ lesson.title }}</h3>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-sec); margin-bottom: 12px;">
+                        <span>��� {{ lesson.duration_minutes }} daq</span>
+                        <span>���� {{ lesson.get_difficulty_display }}</span>
+                    </div>
+                    {% if lesson.is_premium %}
+                        <span style="font-size: 11px; color: var(--gold); font-weight: 700; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 6px;">Gold</span>
+                    {% else %}
+                        <span class="tag-free">Free</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--p3); font-weight: 600;">
+                <span>Boshlash</span>
+                <span>→</span>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-sec);">
+            Bu kursda hali darslar yo'q.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if course.description %}
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-title">
+        <span class="icon">����</span> Kurs haqida
+    </div>
+    <p style="color: var(--text-sec); line-height: 1.7;">{{ course.description }}</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function startLesson(lessonId) {
+    const response = await fetch('/dashboard/api/session/start/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ lesson_id: lessonId })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+        if (data.transcript_status === 'pending' || data.transcript_status === 'processing') {
+            alert('Bu dars hali tayyorlanmoqda. Iltimos biroz kuting va qayta urinib ko\'ring.');
+        } else if (data.transcript_status === 'none') {
+            alert('Bu dars uchun transkript yo\'q. Avval transkript yarating.');
+        } else {
+            alert(data.error);
+        }
+        return;
+    }
+
+    // Redirect to player
+    window.location.href = `/dashboard/lesson/player/?session_id=${data.session_id}`;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

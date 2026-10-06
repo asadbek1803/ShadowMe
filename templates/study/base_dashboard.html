@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ShadowMe — Dashboard{% endblock %}</title>
+    <meta name="description" content="ShadowMe asboblar paneli.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07070d;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --p1: #7c3aed;
+            --p2: #4f46e5;
+            --p3: #06b6d4;
+            --text-main: #f8fafc;
+            --text-sec: #94a3b8;
+            --text-mut: #475569;
+            --gold: #f59e0b;
+            --r: 16px;
+            --r2: 24px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* ── Background Animations ── */
+        .bg-gradient {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 90% 60% at 50% -20%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 40% at 10% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 40% at 90% 70%, rgba(79, 70, 229, 0.06) 0%, transparent 50%);
+        }
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 20%, transparent 100%);
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 260px;
+            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 48px;
+            padding-left: 8px;
+        }
+
+        .brand-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--p1), var(--p3));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 900; color: #fff;
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+        }
+
+        .brand-text {
+            font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #a78bfa, #7c3aed, #06b6d4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-sec);
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(6, 182, 212, 0.1));
+            color: #fff;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            opacity: 0.8;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* ── Profile widget in sidebar ── */
+        .sidebar-profile {
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+            transition: border-color 0.2s;
+        }
+        .sidebar-profile:hover { border-color: rgba(255,255,255,0.2); }
+
+        .profile-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--p1), var(--p3));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff; font-size: 14px; overflow: hidden;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .profile-info { flex: 1; min-width: 0; }
+        .profile-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-plan { font-size: 11px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+
+        /* ── Main Content ── */
+        .main-content {
+            flex: 1;
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 8px;
+        }
+        .greeting {
+            font-size: 32px; font-weight: 800; letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+        .greeting-sub { color: var(--text-sec); font-size: 15px; }
+
+        .header-actions { display: flex; gap: 12px; }
+        .streak-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 12px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--gold); font-weight: 700; font-size: 14px;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .glass-card:hover { border-color: var(--border-hover); }
+        .card-title .icon { color: var(--p1); font-size: 20px; }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        /* ── New Analysis Input Area ── */
+        .upload-area {
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .url-input-wrap {
+            display: flex; gap: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 6px;
+            transition: border-color 0.2s;
+        }
+        .url-input-wrap:focus-within { border-color: var(--p1); box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1); }
+        .url-input {
+            flex: 1; background: transparent; border: none; color: #fff;
+            padding: 0 16px; font-size: 15px; font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+        .url-input::placeholder { color: var(--text-mut); }
+        .btn-analyze {
+            padding: 12px 24px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, var(--p1), var(--p2));
+            color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;
+            transition: transform 0.2s; white-space: nowrap;
+        }
+        .btn-analyze:hover { transform: scale(1.03); }
+
+        .upload-divider {
+            display: flex; align-items: center; text-align: center; color: var(--text-mut); font-size: 12px; text-transform: uppercase; margin: 8px 0;
+        }
+        .upload-divider::before, .upload-divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); margin: 0 12px; }
+
+        .local-upload-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 14px; border-radius: 16px;
+            background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2);
+            color: var(--text-sec); font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .local-upload-btn:hover { background: rgba(255,255,255,0.06); color: #fff; border-color: var(--p3); }
+
+        /* ── Stats Row ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            border-radius: 16px; padding: 20px; text-align: center;
+        }
+        .stat-val { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .stat-lbl { font-size: 12px; color: var(--text-sec); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .val-grad-1 { background: linear-gradient(135deg, #a78bfa, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .val-grad-2 { background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* ── Recommendations ── */
+        .rec-list { display: flex; flex-direction: column; gap: 12px; }
+        .rec-item {
+            display: flex; gap: 16px; align-items: center;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+            padding: 12px; border-radius: 16px; cursor: pointer; transition: all 0.2s;
+        }
+        .rec-item:hover { background: rgba(255,255,255,0.05); transform: translateX(4px); border-color: rgba(124, 58, 237, 0.3); }
+        .rec-thumb {
+            width: 100px; height: 60px; border-radius: 10px;
+            background: #1a1a24; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .rec-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+        .play-icon { position: absolute; font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        .rec-info { flex: 1; }
+        .rec-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+        .rec-meta { font-size: 12px; color: var(--text-sec); display: flex; gap: 8px; }
+        .tag-free { color: var(--green, #10b981); background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+
+        /* ── Resume Card ── */
+        .resume-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.05));
+            border-color: rgba(124, 58, 237, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .resume-card::before {
+            content:''; position: absolute; top:0; left:0; width:4px; height:100%;
+            background: linear-gradient(180deg, var(--p1), var(--p3));
+        }
+        .resume-content { display: flex; align-items: center; justify-content: space-between; }
+        .resume-text h3 { font-size: 16px; margin-bottom: 4px; }
+        .resume-text p { font-size: 13px; color: var(--text-sec); }
+        .btn-resume {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: #fff; color: #000;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; cursor: pointer; transition: transform 0.2s;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .btn-resume:hover { transform: scale(1.1); }
+
+
+        /* ── Mobile Nav ── */
+        .bottom-nav { display: none; }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { padding: 24px 20px 100px 20px; }
+            .greeting { font-size: 24px; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-box:nth-child(3) { grid-column: span 2; }
+
+            /* Bottom Nav */
+            .bottom-nav {
+                display: flex; justify-content: space-around; align-items: center;
+                position: fixed; bottom: 0; left: 0; right: 0; height: 72px;
+                background: rgba(10, 10, 15, 0.85); backdrop-filter: blur(20px);
+                border-top: 1px solid var(--border); z-index: 100;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .bottom-nav-item {
+                display: flex; flex-direction: column; align-items: center; gap: 4px;
+                color: var(--text-mut); font-size: 11px; font-weight: 600; text-decoration: none;
+            }
+            .bottom-nav-item.active { color: var(--p3); }
+            .bottom-nav-item .icon { font-size: 20px; margin-bottom: 2px; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <!-- ── Sidebar (Desktop) ── -->
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <div class="brand-icon">S</div>
+            <div class="brand-text">ShadowMe</div>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="{% url 'study:dashboard' %}" class="nav-item {% if request.path == '/dashboard/' %}active{% endif %}">
+                <span class="nav-icon">🏠</span> Dashboard
+            </a>
+            <a href="{% url 'study:courses' %}" class="nav-item {% if '/dashboard/courses/' in request.path %}active{% endif %}">
+                <span class="nav-icon">📚</span> Mening darslarim
+            </a>
+            <a href="{% url 'study:shadow_dashboard' %}" class="nav-item {% if '/dashboard/shadow/' in request.path %}active{% endif %}">
+                <span class="nav-icon">🎭</span> Shadowing
+            </a>
+            <a href="{% url 'study:analysis' %}" class="nav-item {% if '/dashboard/analysis/' in request.path %}active{% endif %}">
+                <span class="nav-icon">🤖</span> AI Tahlil
+            </a>
+            <a href="{% url 'study:stats' %}" class="nav-item {% if '/dashboard/stats/' in request.path %}active{% endif %}">
+                <span class="nav-icon">📊</span> Statistika
+            </a>
+            <a href="{% url 'study:pricing' %}" class="nav-item {% if '/dashboard/pricing/' in request.path %}active{% endif %}">
+                <span class="nav-icon">💎</span> Tariflar
+            </a>
+            <a href="{% url 'study:settings' %}" class="nav-item {% if '/dashboard/settings/' in request.path %}active{% endif %}" style="margin-top: 16px;">
+                <span class="nav-icon">⚙️</span> Sozlamalar
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="nav-item" style="color: #ef4444;">
+                <span class="nav-icon">🚪</span> Chiqish
+            </a>
+        </nav>
+
+        <div class="sidebar-profile">
+            <div class="profile-avatar">
+                {% if user.profile_image_url %}
+                    <img src="{{ user.profile_image_url }}" alt="{{ user.full_name }}">
+                {% else %}
+                    {{ user.full_name|first|upper }}
+                {% endif %}
+            </div>
+            <div class="profile-info">
+                <div class="profile-name">{{ user.full_name }}</div>
+                <div class="profile-plan">{{ settings.get_plan_display }} Tarif</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <main class="main-content">
+        {% block main_content %}{% endblock %}
+    </main>
+
+    <!-- ── Bottom Nav (Mobile) ── -->
+    <nav class="bottom-nav">
+        <a href="{% url 'study:dashboard' %}" class="bottom-nav-item {% if request.path == '/dashboard/' %}active{% endif %}">
+            <span class="icon">🏠</span>
+            Asosiy
+        </a>
+        <a href="{% url 'study:courses' %}" class="bottom-nav-item {% if '/dashboard/courses/' in request.path %}active{% endif %}">
+            <span class="icon">📚</span>
+            Darslar
+        </a>
+        <a href="{% url 'study:shadow_dashboard' %}" class="bottom-nav-item {% if '/dashboard/shadow/' in request.path %}active{% endif %}" style="position:relative; top:-15px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--p1),var(--p3));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;box-shadow:0 4px 16px rgba(124,58,237,0.4);border:4px solid var(--bg);">
+                🎭
+            </div>
+        </a>
+        <a href="{% url 'study:analysis' %}" class="bottom-nav-item {% if '/dashboard/analysis/' in request.path %}active{% endif %}">
+            <span class="icon">🤖</span>
+            Tahlil
+        </a>
+        <a href="{% url 'study:stats' %}" class="bottom-nav-item {% if '/dashboard/stats/' in request.path %}active{% endif %}">
+            <span class="icon">📊</span>
+            Stat
+        </a>
+        <a href="{% url 'study:settings' %}" class="bottom-nav-item {% if '/dashboard/settings/' in request.path %}active{% endif %}">
+            <span class="icon">⚙️</span>
+            Sozlama
+        </a>
+    </nav>
+
+    {% block extra_js %}{% endblock %}
+    <!-- Global Transcript Toast -->
+    <div id="global-transcript-toast" style="display: none; position: fixed; bottom: 80px; right: 20px; max-width: 300px; background: var(--bg-sec); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 9999; font-family: inherit;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-main);" id="gtt-title">Video tahlili</div>
+            <button onclick="document.getElementById('global-transcript-toast').style.display='none'" style="background: none; border: none; color: var(--text-sec); cursor: pointer; font-size: 16px; padding: 0;">&times;</button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-sec); margin-bottom: 12px;" id="gtt-desc">
+            Video tahlil qilinmoqda (1-2 daqiqa)... Boshqa sahifalardan foydalanishingiz mumkin.
+        </div>
+        <div id="gtt-action" style="display: none;">
+            <a href="#" id="gtt-link" class="btn-primary" style="display: block; text-align: center; font-size: 13px; padding: 8px; border-radius: 8px;">Darsni boshlash</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toast = document.getElementById('global-transcript-toast');
+            const titleEl = document.getElementById('gtt-title');
+            const descEl = document.getElementById('gtt-desc');
+            const actionEl = document.getElementById('gtt-action');
+            const linkEl = document.getElementById('gtt-link');
+
+            // Track transcripts that we have already notified about as ready
+            let notifiedReady = new Set();
+
+            async function checkActiveTranscripts() {
+                try {
+                    const response = await fetch('/dashboard/api/active-transcripts/');
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    if (data && data.transcripts) {
+                        const transcripts = data.transcripts;
+                        // Find the first processing/pending or recently ready
+                        let active = transcripts.find(t => t.status === 'pending' || t.status === 'processing');
+                        let ready = transcripts.find(t => t.status === 'ready' && !notifiedReady.has(t.id));
+
+                        if (ready) {
+                            // Show ready state
+                            titleEl.textContent = ready.title || "Maxsus video";
+                            titleEl.style.color = "#10b981"; // Green
+                            descEl.textContent = "Tahlil tayyor! Darsni boshlashingiz mumkin.";
+                            if (ready.lesson_id) {
+                                linkEl.href = "/dashboard/shadow/lesson/" + ready.lesson_id + "/";
+                                actionEl.style.display = "block";
+                            }
+                            toast.style.display = "block";
+                            notifiedReady.add(ready.id);
+                        } else if (active) {
+                            // Show processing state
+                            titleEl.textContent = active.title || "Maxsus video";
+                            titleEl.style.color = "var(--text-main)";
+                            descEl.innerHTML = "<span style='display:inline-block; animation: pulse 1.5s infinite;'>?</span> Jarayonda... Boshqa sahifalarga o'tishingiz mumkin.";
+                            actionEl.style.display = "none";
+                            toast.style.display = "block";
+                        } else {
+                            // If no active and no new ready
+                            // We don't hide immediately if it's currently showing a ready state that the user hasn't closed
+                            if (titleEl.style.color !== "rgb(16, 185, 129)") { // if not green
+                                toast.style.display = "none";
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to check transcripts", e);
+                }
+            }
+
+            // Check immediately and then every 10 seconds
+            checkActiveTranscripts();
+            setInterval(checkActiveTranscripts, 10000);
+        });
+    </script>
+</body>
+</html>
+

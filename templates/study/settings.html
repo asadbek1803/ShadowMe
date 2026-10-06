@@ -1,0 +1,49 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — Sozlamalar{% endblock %}
+
+{% block main_content %}
+    <header class="page-header" style="margin-bottom: 24px;">
+        <div>
+            <h1 class="greeting" style="font-size: 28px;">Sozlamalar ⚙️</h1>
+            <p class="greeting-sub">Shaxsiy ma'lumotlar va platforma sozlamalarini tahrirlash.</p>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <div class="left-col" style="grid-column: span 2; max-width: 600px;">
+            <div class="glass-card">
+                
+                <form method="post" action="{% url 'study:settings' %}">
+                    {% csrf_token %}
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom: 8px; color: var(--text-sec); font-size: 14px;">Mavzu (Theme)</label>
+                        <select name="theme" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; outline: none; font-family: 'Inter', sans-serif;">
+                            <option value="dark" {% if settings.theme == 'dark' %}selected{% endif %}>Qorong'u (Dark)</option>
+                            <option value="light" {% if settings.theme == 'light' %}selected{% endif %}>Yorug' (Light) - Tez kunda</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom: 8px; color: var(--text-sec); font-size: 14px;">Asosiy til</label>
+                        <select name="default_language" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; outline: none; font-family: 'Inter', sans-serif;">
+                            <option value="uz" {% if settings.default_language == 'uz' %}selected{% endif %}>O'zbekcha</option>
+                            <option value="ru" {% if settings.default_language == 'ru' %}selected{% endif %}>Русский</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;">
+                        <input type="checkbox" name="notifications" id="notifications" {% if settings.notifications_enabled %}checked{% endif %} style="width: 20px; height: 20px; accent-color: var(--p1);">
+                        <label for="notifications" style="color: var(--text-sec); font-size: 14px;">Telegram bildirishnomalari</label>
+                    </div>
+
+                    <button type="submit" class="btn-analyze" style="width: 100%; padding: 16px; font-size: 16px;">
+                        Saqlash
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

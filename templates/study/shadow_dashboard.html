@@ -1,0 +1,193 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — Shadowing (Gölgeleme){% endblock %}
+
+{% block main_content %}
+        <!-- Header -->
+        <header class="page-header">
+            <div>
+                <h1 class="greeting">Shadowing 🎭</h1>
+                <p class="greeting-sub">Talaffuzingizni mustahkamlash uchun 6-bosqichli uslub.</p>
+            </div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-val val-grad-1">{{ active_sessions|length }}</div>
+                <div class="stat-lbl">Faol sessiyalar</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val">{{ completed_sessions|length }}</div>
+                <div class="stat-lbl">Tugallangan</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val val-grad-2">{{ ready_lessons|length }}</div>
+                <div class="stat-lbl">Mavjud darslar</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+
+            <!-- Chap ustun -->
+            <div class="left-col" style="display:flex; flex-direction:column; gap:24px;">
+
+                <!-- Active Sessions -->
+                {% if active_sessions %}
+                <div class="glass-card">
+                    <div class="card-title">
+                        <span class="icon">🔄</span> Davom etilayotgan sessiyalar
+                    </div>
+                    <div class="rec-list">
+                        {% for session in active_sessions %}
+                        <div class="rec-item">
+                            <div class="rec-thumb" style="overflow: hidden; display: flex; align-items: center; justify-content: center; background: #222;">
+                                {% if session.lesson.thumbnail_url %}
+                                    <img src="{{ session.lesson.thumbnail_url }}" alt="thumb" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span>🎭</span>
+                                {% endif %}
+                            </div>
+                            <div class="rec-info">
+                                <div class="rec-title">{{ session.lesson.title }}</div>
+                                <div class="rec-meta">
+                                    <span>{{ session.lesson.course.title }}</span> •
+                                    <span>Bosqich {{ session.get_step_display }}</span>
+                                    <span style="color: var(--p3); font-weight: 600;">{{ session.progress|floatformat:0 }}%</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'study:lesson_player' session.lesson.id %}?session_id={{ session.id }}"
+                               class="btn-primary" style="padding: 10px 20px; font-size: 13px;">
+                                Davom etish
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Ready Lessons -->
+                <div class="glass-card">
+                    <div class="card-title">
+                        <span class="icon">📚</span> Shadowing uchun darslar
+                    </div>
+                    <p style="font-size:14px; color:var(--text-sec); margin-bottom: 20px;">
+                        Transkriptsiyasi tayyor darslardan birini tanlang yoki yangi video qo'shing.
+                    </p>
+
+                    <div class="rec-list">
+                        {% for lesson in ready_lessons %}
+                        <div class="rec-item">
+                            <div class="rec-thumb" style="overflow: hidden; display: flex; align-items: center; justify-content: center; background: #222;">
+                                {% if lesson.thumbnail_url %}
+                                    <img src="{{ lesson.thumbnail_url }}" alt="thumb" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span>🎬</span>
+                                {% endif %}
+                            </div>
+                            <div class="rec-info">
+                                <div class="rec-title">{{ lesson.title }}</div>
+                                <div class="rec-meta">
+                                    <span>{{ lesson.course.title }}</span> • <span>{{ lesson.duration_minutes }} daq</span>
+                                </div>
+                            </div>
+                            {% if lesson.is_premium %}
+                                <span style="font-size:10px; color:var(--gold); font-weight:700;">Gold</span>
+                            {% else %}
+                                <span class="tag-free">Free</span>
+                            {% endif %}
+                            <a href="{% url 'study:lesson_player' lesson.id %}"
+                               class="btn-primary" style="padding: 10px 20px; font-size: 13px;">
+                                Boshlash
+                            </a>
+                        </div>
+                        {% empty %}
+                        <p style="color:var(--text-sec); font-size:13px; text-align:center; padding: 40px 0;">
+                            Hozircha shadowing uchun tayyor darslar yo'q.<br>
+                            <a href="{% url 'study:analysis' %}" style="color: var(--p3);">AI Tahlil</a> sahifasidan video qo'shing.
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Add Custom Video Link -->
+                <div class="glass-card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">➕</div>
+                    <h3 style="margin-bottom: 8px;">O'zingizning videongizni qo'shing</h3>
+                    <p style="color: var(--text-sec); font-size: 14px; margin-bottom: 24px;">
+                        YouTube havolasini yuboring yoki kompyuterdan video yuklang
+                    </p>
+                    <a href="{% url 'study:analysis' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                        🤖 AI Tahlil sahifasiga o'tish
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- O'ng ustun -->
+            <div class="right-col">
+                <!-- Stats Summary -->
+                <div class="glass-card" style="margin-bottom: 24px;">
+                    <div class="card-title">
+                        <span class="icon">📊</span> Sizning statistikangiz
+                    </div>
+                    <div class="stats-row" style="gap: 16px;">
+                        <div class="stat-box" style="flex: 1;">
+                            <div class="stat-val val-grad-1">{{ stats.total_xp }}</div>
+                            <div class="stat-lbl">Jami XP</div>
+                        </div>
+                        <div class="stat-box" style="flex: 1;">
+                            <div class="stat-val">{{ stats.analyzed_videos_count }}</div>
+                            <div class="stat-lbl">Tahlil qilingan</div>
+                        </div>
+                        <div class="stat-box" style="flex: 1;">
+                            <div class="stat-val val-grad-2">🔥 {{ stats.current_streak }}</div>
+                            <div class="stat-lbl">Joriy streak</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Sessions History -->
+                <div class="glass-card" style="height: 100%; min-height: 300px;">
+                    <div class="card-title">
+                        <span class="icon">🏆</span> Tugallangan sessiyalar
+                    </div>
+                    <div class="rec-list" style="max-height: 400px; overflow-y: auto;">
+                        {% for session in completed_sessions %}
+                        <div class="rec-item">
+                            <div class="rec-thumb" style="overflow: hidden; display: flex; align-items: center; justify-content: center; background: #222;">
+                                {% if session.lesson.thumbnail_url %}
+                                    <img src="{{ session.lesson.thumbnail_url }}" alt="thumb" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span>✅</span>
+                                {% endif %}
+                            </div>
+                            <div class="rec-info">
+                                <div class="rec-title">{{ session.lesson.title }}</div>
+                                <div class="rec-meta">
+                                    <span>{{ session.lesson.course.title }}</span> •
+                                    <span>{{ session.completed_at|date:"d M Y" }}</span>
+                                </div>
+                            </div>
+                            <div style="font-weight: 800; color: {% if session.score >= 80 %}#10b981{% elif session.score >= 50 %}var(--gold){% else %}#ef4444{% endif %};">
+                                {{ session.score|floatformat:0 }}%
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p style="color:var(--text-sec); font-size:13px; text-align:center; padding: 40px 0;">
+                            Hali tugallangan sessiyalar yo'q.<br>
+                            Birinchi darsingizni boshlang!
+                        </p>
+                        {% endfor %}
+                    </div>
+
+                    {% if completed_sessions|length > 10 %}
+                    <a href="#" style="display:block; text-align:center; margin-top:16px; font-size:14px; color:var(--p3); font-weight:600;">
+                        Barchasini ko'rish →
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+{% endblock %}

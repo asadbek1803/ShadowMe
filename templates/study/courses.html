@@ -1,0 +1,37 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — Mening darslarim{% endblock %}
+
+{% block main_content %}
+    <header class="page-header" style="margin-bottom: 24px;">
+        <div>
+            <h1 class="greeting" style="font-size: 28px;">Mening darslarim 📚</h1>
+            <p class="greeting-sub">O'zingizga mos kursni tanlang va tilni Shadow method orqali o'rganing.</p>
+        </div>
+    </header>
+
+    <div class="glass-card">
+        <div class="card-title">
+            <span class="icon">🔍</span> Mavjud Kurslar
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+            {% for course in courses %}
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: transform 0.2s;">
+                <h3 style="margin-bottom: 8px;">{{ course.title }}</h3>
+                <p style="font-size: 13px; color: var(--text-sec); margin-bottom: 16px; line-height: 1.5;">
+                    {{ course.description|default:"Tavsif yo'q" }}
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: var(--p1); font-weight: 600;">{{ course.lesson_count }} ta dars</span>
+                    <a href="#" style="padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 13px; font-weight: 600; transition: background 0.2s;">
+                        Ko'rish
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color: var(--text-sec); font-size: 14px;">Hozircha kurslar qo'shilmagan.</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

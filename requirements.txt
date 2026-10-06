@@ -1,0 +1,12 @@
+Django>=4.2,<5.0
+uvicorn>=0.29.0
+aiogram==3.7.0
+python-dotenv==1.0.0
+requests==2.31.0
+yt-dlp==2024.1.1
+faster-whisper==1.0.3
+whisperx==3.1.6
+torch==2.2.0
+torchaudio==2.2.0
+# Note: whisperx has heavy dependencies (pyannote.audio, torch)
+# For production consider using a separate worker service with GPU

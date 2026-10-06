@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShadowMe — AI bilan Shadow Method orqali Til O'rgan</title>
+  <meta name="description" content="YouTube yoki lokal video yuklang, AI transkrip qiladi, karaoke usulida takrorlang, ovozingizni tahlil qiladi. Shadow method ning eng zamonaviy platformasi." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#07070d;--bg2:#0e0e1a;
+      --sf:rgba(255,255,255,.04);--sf2:rgba(255,255,255,.07);
+      --br:rgba(255,255,255,.08);--br2:rgba(255,255,255,.14);
+      --p1:#7c3aed;--p2:#4f46e5;--p3:#06b6d4;
+      --gold:#f59e0b;--gold2:#fbbf24;
+      --vip:#ec4899;--vip2:#f43f5e;
+      --green:#10b981;--red:#ef4444;
+      --txt:#f8fafc;--txt2:#94a3b8;--txt3:#475569;
+      --r:16px;--r2:24px;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;line-height:1.6}
+    a{color:inherit;text-decoration:none}
+
+    /* BG */
+    .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 90% 60% at 50% -10%,rgba(124,58,237,.18) 0%,transparent 60%),
+        radial-gradient(ellipse 50% 40% at 85% 80%,rgba(6,182,212,.10) 0%,transparent 50%),
+        radial-gradient(ellipse 40% 40% at 15% 70%,rgba(79,70,229,.08) 0%,transparent 50%)}
+    .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+      background-size:48px 48px;
+      mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+    .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;animation:orb-float 10s ease-in-out infinite}
+    .orb-a{width:500px;height:500px;background:rgba(124,58,237,.1);top:-150px;left:-150px}
+    .orb-b{width:350px;height:350px;background:rgba(6,182,212,.07);bottom:-80px;right:-80px;animation-delay:4s}
+    .orb-c{width:250px;height:250px;background:rgba(79,70,229,.09);top:40%;right:8%;animation-delay:7s}
+    @keyframes orb-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-40px) scale(1.06)}}
+    section,nav,footer{position:relative;z-index:1}
+
+    /* NAVBAR */
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5%;height:68px;
+      display:flex;align-items:center;justify-content:space-between;
+      backdrop-filter:blur(20px) saturate(180%);background:rgba(7,7,13,.7);
+      border-bottom:1px solid var(--br);transition:background .3s}
+    .navbar.scrolled{background:rgba(7,7,13,.93)}
+    .nav-logo{display:flex;align-items:center;gap:10px}
+    .nav-logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--p1),var(--p3));border-radius:10px;
+      display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;
+      box-shadow:0 4px 16px rgba(124,58,237,.4)}
+    .nav-logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px;
+      background:linear-gradient(135deg,#a78bfa,#7c3aed,#06b6d4);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-links{display:flex;align-items:center;gap:4px;list-style:none}
+    .nav-links a{padding:8px 14px;border-radius:10px;font-size:14px;font-weight:500;color:var(--txt2);transition:all .2s}
+    .nav-links a:hover{color:var(--txt);background:var(--sf)}
+    .btn-login{padding:9px 20px;border-radius:10px;font-size:14px;font-weight:600;
+      background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border:none;cursor:pointer;
+      transition:all .25s cubic-bezier(.16,1,.3,1);box-shadow:0 4px 14px rgba(124,58,237,.35);white-space:nowrap}
+    .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.5)}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+    .hamburger span{display:block;width:24px;height:2px;background:var(--txt2);border-radius:2px;transition:all .3s}
+    .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    .hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+    .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+    .mobile-nav{display:none;position:fixed;top:68px;left:0;right:0;z-index:99;
+      background:rgba(7,7,13,.97);border-bottom:1px solid var(--br);backdrop-filter:blur(20px);
+      padding:20px 5% 28px;flex-direction:column;gap:4px;animation:slide-down .25s ease}
+    @keyframes slide-down{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .mobile-nav.open{display:flex}
+    .mobile-nav a{padding:12px 16px;border-radius:12px;font-size:15px;font-weight:500;color:var(--txt2);transition:all .2s}
+    .mobile-nav a:hover{background:var(--sf);color:var(--txt)}
+    .mobile-nav .btn-login{text-align:center;margin-top:8px}
+
+    /* HERO */
+    .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
+      text-align:center;padding:130px 5% 80px}
+    .hero-inner{max-width:920px;width:100%}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;
+      background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);
+      font-size:13px;font-weight:600;color:#a78bfa;margin-bottom:28px;animation:fade-up .7s ease both}
+    .dot{width:7px;height:7px;border-radius:50%;background:#a78bfa;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+    .hero-title{font-size:clamp(38px,6.5vw,80px);font-weight:900;line-height:1.08;letter-spacing:-2px;
+      margin-bottom:24px;animation:fade-up .7s .1s ease both}
+    .grad{background:linear-gradient(135deg,#a78bfa 0%,#7c3aed 35%,#06b6d4 80%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-sub{font-size:clamp(15px,1.8vw,19px);color:var(--txt2);max-width:640px;margin:0 auto 40px;
+      font-weight:400;line-height:1.75;animation:fade-up .7s .2s ease both}
+    .hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fade-up .7s .3s ease both}
+    .btn-primary{padding:15px 32px;border-radius:14px;font-size:16px;font-weight:700;
+      background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border:none;cursor:pointer;
+      transition:all .25s cubic-bezier(.16,1,.3,1);box-shadow:0 6px 24px rgba(124,58,237,.4);
+      display:inline-flex;align-items:center;gap:8px}
+    .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(124,58,237,.55)}
+    .btn-outline{padding:15px 32px;border-radius:14px;font-size:16px;font-weight:600;
+      background:transparent;color:var(--txt);border:1px solid var(--br2);cursor:pointer;
+      transition:all .25s;display:inline-flex;align-items:center;gap:8px}
+    .btn-outline:hover{background:var(--sf);border-color:rgba(255,255,255,.2)}
+    @keyframes fade-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+    /* DEMO KARAOKE UI */
+    .hero-demo{margin-top:64px;animation:fade-up .7s .45s ease both}
+    .demo-card{background:rgba(14,14,26,.85);border:1px solid rgba(124,58,237,.25);
+      border-radius:24px;padding:28px 32px;backdrop-filter:blur(24px);
+      box-shadow:0 32px 80px rgba(0,0,0,.5);max-width:740px;margin:0 auto;
+      position:relative;overflow:hidden}
+    .demo-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--p1),var(--p3));opacity:.6}
+    .demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .demo-header-left{display:flex;align-items:center;gap:10px}
+    .demo-title{font-size:13px;font-weight:600;color:var(--txt2)}
+    .demo-lang-tag{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;
+      background:rgba(6,182,212,.15);color:var(--p3);letter-spacing:.5px}
+    .demo-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green)}
+    .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:rec-pulse 1s infinite}
+    @keyframes rec-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    /* karaoke text */
+    .karaoke-line{font-size:clamp(16px,2.5vw,22px);font-weight:600;line-height:1.7;
+      margin-bottom:8px;letter-spacing:.5px}
+    .karaoke-line .word{display:inline-block;margin-right:6px;transition:all .15s;color:var(--txt3)}
+    .karaoke-line .word.active{color:#fff;text-shadow:0 0 20px rgba(124,58,237,.8)}
+    .karaoke-line .word.done{color:#a78bfa}
+    .karaoke-sub{font-size:13px;color:var(--txt3);margin-bottom:20px;font-style:italic}
+    /* waveform */
+    .waveform{display:flex;align-items:center;gap:3px;height:40px;margin-bottom:20px}
+    .wave-bar{width:4px;border-radius:4px;background:linear-gradient(180deg,var(--p1),var(--p3));
+      animation:wave-anim 1s ease-in-out infinite;transform-origin:bottom}
+    @keyframes wave-anim{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+    /* feedback row */
+    .feedback-row{display:flex;gap:10px;flex-wrap:wrap}
+    .fb-chip{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px}
+    .fb-chip.ok{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+    .fb-chip.warn{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.25)}
+    .fb-chip.err{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+    /* progress bar */
+    .demo-progress{margin-top:20px;height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+    .demo-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p1),var(--p3));
+      animation:progress-anim 8s linear infinite}
+    @keyframes progress-anim{0%{width:0}100%{width:100%}}
+
+    /* STATS */
+    .stats{padding:60px 5%;border-top:1px solid var(--br);border-bottom:1px solid var(--br)}
+    .stats-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center}
+    .stat-num{font-size:clamp(32px,5vw,52px);font-weight:900;line-height:1;
+      background:linear-gradient(135deg,#a78bfa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-label{font-size:14px;color:var(--txt2);margin-top:6px;font-weight:500}
+
+    /* SECTIONS */
+    .section-header{text-align:center;margin-bottom:60px}
+    .section-badge{display:inline-block;padding:6px 16px;border-radius:100px;
+      background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);
+      font-size:12px;font-weight:700;color:#a78bfa;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
+    .section-title{font-size:clamp(28px,4vw,48px);font-weight:800;line-height:1.15;letter-spacing:-1px;margin-bottom:16px}
+    .section-sub{font-size:16px;color:var(--txt2);max-width:580px;margin:0 auto;line-height:1.7}
+
+    /* HOW */
+    .how{padding:100px 5%}
+    .how-flow{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);align-items:start;gap:0}
+    .how-step{text-align:center;position:relative}
+    .step-icon-wrap{position:relative;display:flex;justify-content:center;margin-bottom:20px}
+    .step-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+      font-size:26px;margin:0 auto;position:relative;z-index:1;
+      border:1px solid var(--br2);transition:transform .3s}
+    .step-icon:hover{transform:translateY(-4px) scale(1.05)}
+    .step-icon.s1{background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(79,70,229,.15))}
+    .step-icon.s2{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(79,70,229,.15))}
+    .step-icon.s3{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,191,36,.1))}
+    .step-icon.s4{background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(244,63,94,.1))}
+    .step-icon.s5{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.1))}
+    .step-arrow{position:absolute;top:50%;left:calc(50% + 32px);right:calc(-50% + 32px);
+      height:2px;background:linear-gradient(90deg,rgba(124,58,237,.4),rgba(6,182,212,.2));
+      transform:translateY(-50%)}
+    .step-arrow::after{content:'▶';position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+      font-size:10px;color:rgba(6,182,212,.5)}
+    .step-num{font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:1px;
+      text-transform:uppercase;margin-bottom:6px}
+    .step-title{font-size:14px;font-weight:700;margin-bottom:6px}
+    .step-desc{font-size:12px;color:var(--txt2);line-height:1.6;padding:0 8px}
+
+    /* FEATURES */
+    .features{padding:100px 5%;background:linear-gradient(180deg,transparent,rgba(124,58,237,.03),transparent)}
+    .features-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    .feat-card{background:var(--sf);border:1px solid var(--br);border-radius:var(--r2);padding:30px;
+      transition:all .3s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+    .feat-card::after{content:'';position:absolute;inset:0;opacity:0;
+      background:linear-gradient(135deg,rgba(124,58,237,.08),transparent);transition:opacity .3s;pointer-events:none}
+    .feat-card:hover{transform:translateY(-6px);border-color:rgba(124,58,237,.3);
+      box-shadow:0 20px 50px rgba(0,0,0,.4)}
+    .feat-card:hover::after{opacity:1}
+    .feat-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;
+      justify-content:center;font-size:24px;margin-bottom:18px}
+    .fi-p{background:rgba(124,58,237,.15)}.fi-c{background:rgba(6,182,212,.15)}
+    .fi-g{background:rgba(245,158,11,.15)}.fi-k{background:rgba(236,72,153,.15)}
+    .fi-gr{background:rgba(16,185,129,.15)}.fi-b{background:rgba(59,130,246,.15)}
+    .feat-title{font-size:17px;font-weight:700;margin-bottom:8px}
+    .feat-desc{font-size:13px;color:var(--txt2);line-height:1.7}
+    .feat-tag{display:inline-flex;align-items:center;gap:4px;margin-top:12px;
+      padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;
+      background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.2)}
+
+    /* PRICING */
+    .pricing{padding:100px 5%}
+    .pricing-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start}
+    .price-card{background:var(--sf);border:1px solid var(--br);border-radius:var(--r2);padding:36px 32px;
+      position:relative;overflow:hidden;transition:all .3s cubic-bezier(.16,1,.3,1)}
+    .price-card:hover{transform:translateY(-8px);box-shadow:0 32px 80px rgba(0,0,0,.5)}
+    .price-card.gold{border-color:rgba(245,158,11,.4);
+      background:linear-gradient(145deg,rgba(245,158,11,.08),rgba(251,191,36,.04));transform:translateY(-12px)}
+    .price-card.gold:hover{transform:translateY(-20px)}
+    .price-card.vip{border-color:rgba(236,72,153,.3);
+      background:linear-gradient(145deg,rgba(236,72,153,.08),rgba(244,63,94,.04))}
+    .popular-badge{position:absolute;top:20px;right:20px;padding:4px 12px;border-radius:100px;
+      font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000}
+    .plan-icon{font-size:32px;margin-bottom:14px}
+    .plan-name{font-size:20px;font-weight:800;margin-bottom:4px}
+    .plan-tagline{font-size:13px;color:var(--txt2);margin-bottom:20px}
+    .plan-price{display:flex;align-items:baseline;gap:4px;margin-bottom:6px}
+    .plan-price .cur{font-size:20px;font-weight:700;color:var(--txt2);margin-top:4px}
+    .plan-price .amt{font-size:52px;font-weight:900;line-height:1;letter-spacing:-2px}
+    .plan-price .per{font-size:14px;color:var(--txt2)}
+    .plan-div{height:1px;background:var(--br);margin:22px 0}
+    .plan-features{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:28px}
+    .plan-features li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--txt2)}
+    .plan-features li .chk{flex-shrink:0;font-size:15px;margin-top:1px}
+    .plan-features li.off{opacity:.4}
+    .plan-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;
+      cursor:pointer;border:none;transition:all .25s cubic-bezier(.16,1,.3,1)}
+    .pb-free{background:var(--sf2);color:var(--txt);border:1px solid var(--br2)}
+    .pb-free:hover{background:rgba(255,255,255,.1)}
+    .pb-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;
+      box-shadow:0 6px 24px rgba(245,158,11,.4)}
+    .pb-gold:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(245,158,11,.55)}
+    .pb-vip{background:linear-gradient(135deg,var(--vip),var(--vip2));color:#fff;
+      box-shadow:0 6px 24px rgba(236,72,153,.4)}
+    .pb-vip:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(236,72,153,.55)}
+
+    /* TESTIMONIALS */
+    .testimonials{padding:100px 5%}
+    .testi-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    .testi-card{background:var(--sf);border:1px solid var(--br);border-radius:var(--r2);padding:28px;
+      transition:all .3s}
+    .testi-card:hover{transform:translateY(-4px);border-color:rgba(124,58,237,.25);box-shadow:0 16px 48px rgba(0,0,0,.4)}
+    .testi-stars{color:var(--gold);font-size:14px;margin-bottom:14px;letter-spacing:2px}
+    .testi-text{font-size:14px;color:var(--txt2);line-height:1.8;margin-bottom:18px;font-style:italic}
+    .testi-author{display:flex;align-items:center;gap:12px}
+    .testi-av{width:44px;height:44px;border-radius:50%;
+      background:linear-gradient(135deg,var(--p1),var(--p3));
+      display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+    .testi-name{font-size:14px;font-weight:700}
+    .testi-role{font-size:12px;color:var(--txt3)}
+
+    /* TEAM */
+    .team{padding:100px 5%}
+    .team-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    .team-card{background:var(--sf);border:1px solid var(--br);border-radius:var(--r2);
+      padding:28px 20px;text-align:center;transition:all .3s}
+    .team-card:hover{transform:translateY(-6px);border-color:rgba(124,58,237,.3);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+    .team-av{width:72px;height:72px;border-radius:50%;
+      background:linear-gradient(135deg,var(--p1),var(--p3));margin:0 auto 14px;
+      display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;
+      border:2px solid rgba(124,58,237,.3)}
+    .team-name{font-size:16px;font-weight:700;margin-bottom:4px}
+    .team-role{font-size:13px;color:var(--txt2);margin-bottom:12px}
+    .team-soc{display:flex;gap:8px;justify-content:center}
+    .team-soc a{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.06);
+      border:1px solid var(--br);display:flex;align-items:center;justify-content:center;
+      font-size:14px;transition:all .2s}
+    .team-soc a:hover{background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.4)}
+
+    /* CTA */
+    .cta-section{padding:100px 5%;text-align:center}
+    .cta-card{max-width:700px;margin:0 auto;
+      background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(79,70,229,.1),rgba(6,182,212,.08));
+      border:1px solid rgba(124,58,237,.3);border-radius:32px;padding:64px 48px;
+      backdrop-filter:blur(20px);box-shadow:0 0 80px rgba(124,58,237,.1)}
+    .cta-title{font-size:clamp(26px,4vw,40px);font-weight:800;margin-bottom:14px;letter-spacing:-1px}
+    .cta-sub{font-size:16px;color:var(--txt2);margin-bottom:36px;line-height:1.7}
+    .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+    /* FOOTER */
+    .footer{padding:60px 5% 40px;border-top:1px solid var(--br)}
+    .footer-top{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+    .brand-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .brand-name{font-size:18px;font-weight:800;
+      background:linear-gradient(135deg,#a78bfa,#7c3aed,#06b6d4);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .footer-brand p{font-size:14px;color:var(--txt2);line-height:1.7;max-width:280px}
+    .footer-col h4{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      color:var(--txt3);margin-bottom:14px}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+    .footer-col ul li a{font-size:14px;color:var(--txt2);transition:color .2s}
+    .footer-col ul li a:hover{color:var(--txt)}
+    .footer-bottom{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;
+      padding-top:24px;border-top:1px solid var(--br);font-size:13px;color:var(--txt3);flex-wrap:wrap;gap:12px}
+
+    /* REVEAL */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .rd1{transition-delay:.1s}.rd2{transition-delay:.2s}.rd3{transition-delay:.3s}
+    .rd4{transition-delay:.4s}.rd5{transition-delay:.5s}
+
+    /* RESPONSIVE */
+    @media(max-width:1024px){
+      .features-grid{grid-template-columns:repeat(2,1fr)}
+      .team-grid{grid-template-columns:repeat(2,1fr)}
+      .footer-top{grid-template-columns:1fr 1fr}
+      .how-flow{grid-template-columns:1fr 1fr;gap:24px}
+      .step-arrow{display:none}
+    }
+    @media(max-width:768px){
+      .nav-links,.nav-cta .btn-login{display:none}
+      .hamburger{display:flex}
+      .stats-grid{grid-template-columns:repeat(2,1fr)}
+      .features-grid{grid-template-columns:1fr}
+      .pricing-grid{grid-template-columns:1fr}
+      .price-card.gold{transform:none}
+      .price-card.gold:hover{transform:translateY(-8px)}
+      .testi-grid{grid-template-columns:1fr}
+      .team-grid{grid-template-columns:repeat(2,1fr)}
+      .footer-top{grid-template-columns:1fr;gap:32px}
+      .footer-bottom{flex-direction:column;text-align:center}
+      .how-flow{grid-template-columns:1fr}
+      .cta-card{padding:40px 24px}
+      .hero-btns{flex-direction:column;align-items:center}
+    }
+    @media(max-width:480px){
+      .stats-grid{grid-template-columns:1fr 1fr}
+      .team-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-canvas"></div>
+<div class="bg-grid"></div>
+<div class="orb orb-a"></div>
+<div class="orb orb-b"></div>
+<div class="orb orb-c"></div>
+
+<!-- ══════════════ NAVBAR ══════════════ -->
+<nav class="navbar" id="navbar">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">S</div>
+    <span class="nav-logo-text">ShadowMe</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how">Qanday ishlaydi</a></li>
+    <li><a href="#features">Imkoniyatlar</a></li>
+    <li><a href="#pricing">Narxlar</a></li>
+    <li><a href="#team">Jamoa</a></li>
+    <li><a href="#reviews">Fikrlar</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="/login/" class="btn-login">Kirish →</a>
+  </div>
+  <button class="hamburger" id="hamburger" aria-label="Menyu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-nav" id="mobileNav">
+  <a href="#how"      class="mobile-link">Qanday ishlaydi</a>
+  <a href="#features" class="mobile-link">Imkoniyatlar</a>
+  <a href="#pricing"  class="mobile-link">Narxlar</a>
+  <a href="#team"     class="mobile-link">Jamoa</a>
+  <a href="#reviews"  class="mobile-link">Fikrlar</a>
+  <a href="/login/"   class="btn-login" style="text-align:center;margin-top:8px">Kirish →</a>
+</div>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      AI + Shadow Method — Tilni eshitib, takrorlab, o'rgan
+    </div>
+
+    <h1 class="hero-title">
+      Video yuklang —<br/>
+      <span class="grad">AI o'rgatadi, siz takrorlaysiz</span>
+    </h1>
+
+    <p class="hero-sub">
+      YouTube URL yoki lokal video yuklang. ShadowMe AI yordamida transkrip qiladi, karaoke usulida ko'rsatadi, ovozingizni yozib oladi va talaffuzingizni tahlil qilib, xatolaringizni real vaqtda ko'rsatadi.
+    </p>
+
+    <div class="hero-btns">
+      <a href="/login/" class="btn-primary">🚀 Bepul boshlash</a>
+      <a href="#how"    class="btn-outline">▶ Qanday ishlaydi</a>
+    </div>
+
+    <!-- LIVE DEMO KARAOKE MOCKUP -->
+    <div class="hero-demo">
+      <div class="demo-card">
+        <div class="demo-header">
+          <div class="demo-header-left">
+            <span class="demo-title">🎬 TOPIK I — Level 1 · Dars 3</span>
+            <span class="demo-lang-tag">🇰🇷 KOREYS</span>
+          </div>
+          <div class="demo-status">
+            <span class="rec-dot"></span> Yozib olinmoqda
+          </div>
+        </div>
+
+        <!-- karaoke text -->
+        <div class="karaoke-line" id="karaokeText"></div>
+        <div class="karaoke-sub">Yaponcha romanizatsiya: an-nyeong-ha-se-yo, jo-eun a-chim-i-e-yo</div>
+
+        <!-- waveform -->
+        <div class="waveform" id="waveform"></div>
+
+        <!-- AI feedback chips -->
+        <div class="feedback-row">
+          <div class="fb-chip ok">✅ Tezlik: Yaxshi</div>
+          <div class="fb-chip warn">⚠ "안녕" — unlaut to'g'ri chiqmadi</div>
+          <div class="fb-chip err">❌ Oxirgi bo'g'in tushib qoldi</div>
+          <div class="fb-chip ok">✅ Ohang: A'lo</div>
+        </div>
+
+        <div class="demo-progress"><div class="demo-progress-fill"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ STATS ══════════════ -->
+<div class="stats">
+  <div class="stats-grid">
+    <div class="reveal">
+      <div class="stat-num" data-target="12000">0</div>
+      <div class="stat-label">Faol o'quvchilar</div>
+    </div>
+    <div class="reveal rd1">
+      <div class="stat-num" data-target="340">0</div>
+      <div class="stat-label">Tahlil qilingan video dars</div>
+    </div>
+    <div class="reveal rd2">
+      <div class="stat-num" data-target="98">0</div>
+      <div class="stat-label">% mamnunlik darajasi</div>
+    </div>
+    <div class="reveal rd3">
+      <div class="stat-num" data-target="5">0</div>
+      <div class="stat-label">Daqiqada talaffuz tahlili</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ HOW IT WORKS ══════════════ -->
+<section class="how" id="how">
+  <div class="section-header reveal">
+    <span class="section-badge">Jarayon</span>
+    <h2 class="section-title">5 qadamda til o'rganish</h2>
+    <p class="section-sub">YouTube URL kiriting yoki video yuklang — qolgani AI qo'lida.</p>
+  </div>
+
+  <div class="how-flow">
+    <div class="how-step reveal">
+      <div class="step-icon-wrap">
+        <div class="step-icon s1">🎬</div>
+        <div class="step-arrow"></div>
+      </div>
+      <div class="step-num">1-qadam</div>
+      <div class="step-title">Video tanlash</div>
+      <div class="step-desc">YouTube URL yoki kompyuterdan MP4/MKV video yuklang (max 10 daqiqa). Free foydalanuvchilar platformadagi tayyor videolardan foydalanadi.</div>
+    </div>
+
+    <div class="how-step reveal rd1">
+      <div class="step-icon-wrap">
+        <div class="step-icon s2">🤖</div>
+        <div class="step-arrow"></div>
+      </div>
+      <div class="step-num">2-qadam</div>
+      <div class="step-title">AI Transkripsiya</div>
+      <div class="step-desc">AI model (Whisper) ovozni matnга aylantiradi. Har bir so'z vaqti bilan belgilanadi — karaoke uchun tayyor bo'ladi.</div>
+    </div>
+
+    <div class="how-step reveal rd2">
+      <div class="step-icon-wrap">
+        <div class="step-icon s3">🎤</div>
+        <div class="step-arrow"></div>
+      </div>
+      <div class="step-num">3-qadam</div>
+      <div class="step-title">Karaoke + Takrorlash</div>
+      <div class="step-desc">So'zlar video bilan sinxron ravishda yonib chiqadi. Audio tinglang, keyin xuddi shunday takrorlang — mikrofon yozib oladi.</div>
+    </div>
+
+    <div class="how-step reveal rd3">
+      <div class="step-icon-wrap">
+        <div class="step-icon s4">📊</div>
+        <div class="step-arrow"></div>
+      </div>
+      <div class="step-num">4-qadam</div>
+      <div class="step-title">AI Tahlil</div>
+      <div class="step-desc">Yozilgan ovoz AI tomonidan tahlil qilinadi. Noto'g'ri talaffuz, tushib qolgan bo'g'inlar va tezlik xatolari ko'rsatiladi.</div>
+    </div>
+
+    <div class="how-step reveal rd4">
+      <div class="step-icon-wrap">
+        <div class="step-icon s5">🏆</div>
+      </div>
+      <div class="step-num">5-qadam</div>
+      <div class="step-title">O'sish va progress</div>
+      <div class="step-desc">Har bir sessiyadan keyin ballar qo'shiladi. Grafik statistika, xato tahlili va o'sish tendensiyasi ko'rsatiladi.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FEATURES ══════════════ -->
+<section class="features" id="features">
+  <div class="section-header reveal">
+    <span class="section-badge">Imkoniyatlar</span>
+    <h2 class="section-title">AI nima qila oladi?</h2>
+    <p class="section-sub">ShadowMe oddiy audio o'yin emas — bu sizning shaxsiy til muallimingiz.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feat-card reveal">
+      <div class="feat-icon fi-p">🎬</div>
+      <div class="feat-title">YouTube & Lokal Video</div>
+      <div class="feat-desc">Istalgan YouTube URL yoki kompyuteringizdan video yuklang. AI uni avtomatik qayta ishlaydi va shadow darsiga aylantiradi.</div>
+      <div class="feat-tag">🆓 Free versiyada tayyor videolar</div>
+    </div>
+
+    <div class="feat-card reveal rd1">
+      <div class="feat-icon fi-c">🗣️</div>
+      <div class="feat-title">Karaoke-style Takrorlash</div>
+      <div class="feat-desc">So'zlar audio bilan sinxron yonib chiqadi. Avval tinglab, keyin xuddi shunday takrorlaysiz. Native speaker bilan bir xil ritmda gapirish o'rganiladi.</div>
+      <div class="feat-tag">⚡ Real-time sinxronizatsiya</div>
+    </div>
+
+    <div class="feat-card reveal rd2">
+      <div class="feat-icon fi-g">🤖</div>
+      <div class="feat-title">AI Transkripsiya (Whisper)</div>
+      <div class="feat-desc">OpenAI Whisper modeli yordamida 95%+ aniqlikda transkript yaratiladi. Koreys, Ingliz va boshqa tillar qo'llab-quvvatlanadi.</div>
+      <div class="feat-tag">🌍 Ko'p til qo'llab-quvvatlash</div>
+    </div>
+
+    <div class="feat-card reveal rd1">
+      <div class="feat-icon fi-k">🎙️</div>
+      <div class="feat-title">Ovoz Tahlili</div>
+      <div class="feat-desc">Mikrofon orqali yozilgan ovozingiz AI tarafidan tahlil qilinadi. Noto'g'ri talaffuz, ohang xatolari va tezlik muammolari aniqlanadi.</div>
+      <div class="feat-tag">🔬 Fonetik tahlil</div>
+    </div>
+
+    <div class="feat-card reveal rd2">
+      <div class="feat-icon fi-gr">📈</div>
+      <div class="feat-title">Real-time Fikr-mulohaza</div>
+      <div class="feat-desc">Har bir so'z bo'yicha noto'g'ri talaffuz ranglar bilan ajratiladi. Qaysi joyda xato qilganingizni ko'rsatib, to'g'ri variant taklif qilinadi.</div>
+      <div class="feat-tag">✅ So'zma-so'z tahlil</div>
+    </div>
+
+    <div class="feat-card reveal rd3">
+      <div class="feat-icon fi-b">📊</div>
+      <div class="feat-title">Progress Dashboard</div>
+      <div class="feat-desc">Haftalik o'sish grafigi, eng ko'p xato qilinadigan so'zlar, streak kalendar va umumiy talaffuz sifati ko'rsatkichlari.</div>
+      <div class="feat-tag">📅 Kunlik statistika</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ PRICING ══════════════ -->
+<section class="pricing" id="pricing">
+  <div class="section-header reveal">
+    <span class="section-badge">Narxlar</span>
+    <h2 class="section-title">O'zingizga mos tarifni tanlang</h2>
+    <p class="section-sub">Free versiyada ham AI tahlili ishlaydi. Istalgan vaqt bekor qilish mumkin.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <!-- FREE -->
+    <div class="price-card reveal">
+      <div class="plan-icon">🌱</div>
+      <div class="plan-name">Free</div>
+      <div class="plan-tagline">Shadow methodga ko'nikish uchun</div>
+      <div class="plan-price">
+        <span class="cur">$</span><span class="amt">0</span><span class="per">/oy</span>
+      </div>
+      <div class="plan-div"></div>
+      <ul class="plan-features">
+        <li><span class="chk">✅</span>Platformadagi 20 ta bepul video dars</li>
+        <li><span class="chk">✅</span>AI karaoke-style takrorlash</li>
+        <li><span class="chk">✅</span>Ovoz yozish va AI tahlili</li>
+        <li><span class="chk">✅</span>Telegram OTP kirish</li>
+        <li><span class="chk">✅</span>Kunlik progress ko'rish</li>
+        <li class="off"><span class="chk">❌</span>YouTube URL yuklash</li>
+        <li class="off"><span class="chk">❌</span>Lokal video yuklash</li>
+        <li class="off"><span class="chk">❌</span>Cheksiz AI tahlil sessiyalari</li>
+      </ul>
+      <a href="/login/" class="plan-btn pb-free">Bepul boshlash</a>
+    </div>
+
+    <!-- GOLD -->
+    <div class="price-card gold reveal rd1">
+      <div class="popular-badge">⭐ Mashhur</div>
+      <div class="plan-icon">🥇</div>
+      <div class="plan-name" style="color:var(--gold)">Gold</div>
+      <div class="plan-tagline">Jiddiy til o'rganuvchilar uchun</div>
+      <div class="plan-price">
+        <span class="cur" style="color:var(--gold)">$</span>
+        <span class="amt" style="color:var(--gold)">5</span>
+        <span class="per">/oy</span>
+      </div>
+      <div class="plan-div" style="background:rgba(245,158,11,.2)"></div>
+      <ul class="plan-features">
+        <li><span class="chk">✅</span>Barcha bepul video darslar</li>
+        <li><span class="chk">✅</span><b>YouTube URL yuklash (oyiga 30 ta)</b></li>
+        <li><span class="chk">✅</span>Lokal video yuklash (500 MB / fayl)</li>
+        <li><span class="chk">✅</span>Cheksiz AI tahlil sessiyalari</li>
+        <li><span class="chk">✅</span>Ikkala til (Koreys + Ingliz)</li>
+        <li><span class="chk">✅</span>Batafsil xato hisoboti (PDF)</li>
+        <li><span class="chk">✅</span>Prioritet qo'llab-quvvatlash</li>
+        <li class="off"><span class="chk">❌</span>Shaxsiy murabbiy</li>
+      </ul>
+      <a href="/login/" class="plan-btn pb-gold">Gold boshlash →</a>
+    </div>
+
+    <!-- VIP -->
+    <div class="price-card vip reveal rd2">
+      <div class="plan-icon">💎</div>
+      <div class="plan-name" style="color:var(--vip)">VIP</div>
+      <div class="plan-tagline">Professional til egallash</div>
+      <div class="plan-price">
+        <span class="cur" style="color:var(--vip)">$</span>
+        <span class="amt" style="color:var(--vip)">15</span>
+        <span class="per">/oy</span>
+      </div>
+      <div class="plan-div" style="background:rgba(236,72,153,.2)"></div>
+      <ul class="plan-features">
+        <li><span class="chk">✅</span>Gold dagi hamma narsa</li>
+        <li><span class="chk">✅</span><b>Cheksiz YouTube & lokal video</b></li>
+        <li><span class="chk">✅</span>Shaxsiy AI murabbiy (chat)</li>
+        <li><span class="chk">✅</span>Haftalik jonli dars (mentor)</li>
+        <li><span class="chk">✅</span>Sertifikat (A1–C2 darajasi)</li>
+        <li><span class="chk">✅</span>Yangi tillar early access</li>
+        <li><span class="chk">✅</span>24/7 qo'llab-quvvatlash</li>
+      </ul>
+      <a href="/login/" class="plan-btn pb-vip">VIP boshlash →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ TESTIMONIALS ══════════════ -->
+<section class="testimonials" id="reviews">
+  <div class="section-header reveal">
+    <span class="section-badge">Foydalanuvchilar fikri</span>
+    <h2 class="section-title">12,000+ o'quvchi nima deydi?</h2>
+    <p class="section-sub">Haqiqiy foydalanuvchilarning haqiqiy natijalari.</p>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"BTS intervyusini YouTube dan yuklab, karaoke usulida takrorladim. AI mening "받침" talaffuzimni aniq ko'rsatdi. 2 oyda sezilari natija!"</p>
+      <div class="testi-author">
+        <div class="testi-av">D</div>
+        <div><div class="testi-name">Dilnoza Yusupova</div><div class="testi-role">Toshkent · Gold foydalanuvchi</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal rd1">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"TED talk ni uploadladim, AI transkrip qildi, takrorladim. Ingliz tili intervyusidan o'tdim! Ovoz tahlili juda aniq ishlaydi."</p>
+      <div class="testi-author">
+        <div class="testi-av">J</div>
+        <div><div class="testi-name">Jasur Toshmatov</div><div class="testi-role">Samarqand · VIP foydalanuvchi</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal rd2">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"Free versiyada ham 20 ta bepul video bor. AI tahlili ishlaydi. Gold ga o'tganimdan keyin o'z videolarimni yuklay boshladim — super!"</p>
+      <div class="testi-author">
+        <div class="testi-av">M</div>
+        <div><div class="testi-name">Malika Rahimova</div><div class="testi-role">Namangan · Free → Gold</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"Karaoke uslubi boshqa hech qayerda yo'q. So'zlar bilan birga yonib chiqishi meni juda e'tiborli qiladi. Har kuni 20 daqiqa mashq qilaman."</p>
+      <div class="testi-author">
+        <div class="testi-av">N</div>
+        <div><div class="testi-name">Nilufar Karimova</div><div class="testi-role">Farg'ona · Gold</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal rd1">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"Lokal video yuklash imkoniyati ajoyib. O'zim yoqtirgan serialni shadow darsiga aylantirib, har kuni takrorlayman. Talaffuz 3 oyda o'zgardi."</p>
+      <div class="testi-author">
+        <div class="testi-av">A</div>
+        <div><div class="testi-name">Akbar Xolmatov</div><div class="testi-role">Buxoro · VIP</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal rd2">
+      <div class="testi-stars">★★★★☆</div>
+      <p class="testi-text">"AI xato ko'rsatishi eng yaxshi qism. 'Bu so'z noto'g'ri' emas, aniq qaysi bo'g'in, qanday bo'lishi kerak — barchasi ko'rsatiladi."</p>
+      <div class="testi-author">
+        <div class="testi-av">S</div>
+        <div><div class="testi-name">Sardor Mirzayev</div><div class="testi-role">Andijon · Gold</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ TEAM ══════════════ -->
+<section class="team" id="team">
+  <div class="section-header reveal">
+    <span class="section-badge">Jamoa</span>
+    <h2 class="section-title">Biz kim?</h2>
+    <p class="section-sub">ShadowMe — til o'rganish muammosini o'z boshidan kechirgan va uni texnologiya yordamida hal qilgan odamlar jamoasi.</p>
+  </div>
+  <div class="team-grid">
+    <div class="team-card reveal">
+      <div class="team-av">A</div>
+      <div class="team-name">Asadbek A.</div>
+      <div class="team-role">Founder & Lead Dev</div>
+      <div class="team-soc">
+        <a href="#" title="Telegram">✈</a><a href="#" title="GitHub">⌨</a>
+      </div>
+    </div>
+    <div class="team-card reveal rd1">
+      <div class="team-av">Z</div>
+      <div class="team-name">Ziyoda N.</div>
+      <div class="team-role">Lingvist & Content</div>
+      <div class="team-soc">
+        <a href="#" title="Telegram">✈</a><a href="#" title="LinkedIn">💼</a>
+      </div>
+    </div>
+    <div class="team-card reveal rd2">
+      <div class="team-av">B</div>
+      <div class="team-name">Bobur Q.</div>
+      <div class="team-role">AI / ML Engineer</div>
+      <div class="team-soc">
+        <a href="#" title="GitHub">⌨</a><a href="#" title="LinkedIn">💼</a>
+      </div>
+    </div>
+    <div class="team-card reveal rd3">
+      <div class="team-av">G</div>
+      <div class="team-name">Gulnora T.</div>
+      <div class="team-role">UX / UI Designer</div>
+      <div class="team-soc">
+        <a href="#" title="Dribbble">🎨</a><a href="#" title="LinkedIn">💼</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CTA ══════════════ -->
+<section class="cta-section">
+  <div class="cta-card reveal">
+    <h2 class="cta-title">Bugun video yuklang — AI o'rgatsin!</h2>
+    <p class="cta-sub">Telegram orqali 30 soniyada ro'yxatdan o'ting. Free versiyada 20 ta bepul video dars, AI tahlili va karaoke takrorlash mavjud.</p>
+    <div class="cta-btns">
+      <a href="/login/" class="btn-primary" style="font-size:15px;padding:14px 28px">🚀 Bepul boshlash</a>
+      <a href="#pricing" class="btn-outline" style="font-size:15px;padding:14px 28px">Tariflarni ko'rish</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="brand-logo">
+        <div class="nav-logo-icon" style="width:34px;height:34px;font-size:15px">S</div>
+        <span class="brand-name">ShadowMe</span>
+      </div>
+      <p>AI + Shadow Method yordamida Koreys va Ingliz tillarini karaoke uslubida o'rganish platformasi.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Platforma</h4>
+      <ul>
+        <li><a href="#how">Qanday ishlaydi</a></li>
+        <li><a href="#features">Imkoniyatlar</a></li>
+        <li><a href="#pricing">Narxlar</a></li>
+        <li><a href="/login/">Kirish</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Tillar</h4>
+      <ul>
+        <li><a href="#">🇰🇷 Koreys tili</a></li>
+        <li><a href="#">🇬🇧 Ingliz tili</a></li>
+        <li><a href="#">🌍 Tez orada...</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Aloqa</h4>
+      <ul>
+        <li><a href="https://t.me/ShadowMeLoginBot">Telegram Bot</a></li>
+        <li><a href="#">Yordam markazi</a></li>
+        <li><a href="#">Maxfiylik siyosati</a></li>
+        <li><a href="#">Shartlar</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 ShadowMe.uz — Barcha huquqlar himoyalangan</span>
+    <div style="display:flex;gap:8px">
+      <button style="padding:5px 12px;border-radius:8px;border:1px solid var(--br);background:rgba(124,58,237,.15);
+        border-color:rgba(124,58,237,.3);color:#a78bfa;font-size:12px;cursor:pointer;font-family:inherit">🇺🇿 UZ</button>
+      <button style="padding:5px 12px;border-radius:8px;border:1px solid var(--br);background:transparent;
+        color:var(--txt2);font-size:12px;cursor:pointer;font-family:inherit">🇷🇺 RU</button>
+      <button style="padding:5px 12px;border-radius:8px;border:1px solid var(--br);background:transparent;
+        color:var(--txt2);font-size:12px;cursor:pointer;font-family:inherit">🇬🇧 EN</button>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* Navbar scroll */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', scrollY > 30); }, { passive: true });
+
+  /* Hamburger */
+  const hbg = document.getElementById('hamburger');
+  const mnav = document.getElementById('mobileNav');
+  hbg.addEventListener('click', () => {
+    const open = !mnav.classList.contains('open');
+    mnav.classList.toggle('open', open);
+    hbg.classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  });
+  document.querySelectorAll('.mobile-link, .mobile-nav .btn-login').forEach(a => {
+    a.addEventListener('click', () => { mnav.classList.remove('open'); hbg.classList.remove('open'); document.body.style.overflow = ''; });
+  });
+
+  /* Reveal */
+  const revObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revObs.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+
+  /* Counters */
+  function animCount(el, target) {
+    const dur = 1800, start = performance.now();
+    const suffix = el.dataset.target === '98' ? '%' : el.dataset.target === '5' ? '' : '+';
+    function step(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 4);
+      el.textContent = Math.floor(e * target).toLocaleString() + (p < 1 ? '' : suffix);
+      if (p < 1) requestAnimationFrame(step); else el.textContent = target.toLocaleString() + suffix;
+    }
+    requestAnimationFrame(step);
+  }
+  const cntObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animCount(e.target, +e.target.dataset.target); cntObs.unobserve(e.target); } });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('[data-target]').forEach(el => cntObs.observe(el));
+
+  /* Karaoke demo */
+  const words = ['안녕하세요,', '좋은', '아침이에요.', '오늘', '날씨가', '참', '좋네요!'];
+  const karEl = document.getElementById('karaokeText');
+  if (karEl) {
+    karEl.innerHTML = words.map((w, i) => `<span class="word" id="kw${i}">${w}</span>`).join('');
+    let cur = 0;
+    function nextWord() {
+      if (cur > 0) document.getElementById('kw' + (cur - 1))?.classList.replace('active', 'done');
+      const el = document.getElementById('kw' + cur);
+      if (el) el.classList.add('active');
+      cur++;
+      if (cur < words.length) setTimeout(nextWord, 600 + Math.random() * 400);
+      else setTimeout(() => { cur = 0; karEl.querySelectorAll('.word').forEach(w => w.className = 'word'); setTimeout(nextWord, 800); }, 1500);
+    }
+    setTimeout(nextWord, 1000);
+  }
+
+  /* Waveform */
+  const wf = document.getElementById('waveform');
+  if (wf) {
+    for (let i = 0; i < 48; i++) {
+      const b = document.createElement('div');
+      b.className = 'wave-bar';
+      b.style.cssText = `height:${10 + Math.random() * 30}px;animation-delay:${(i * 0.04).toFixed(2)}s;opacity:${0.3 + Math.random() * 0.7}`;
+      wf.appendChild(b);
+    }
+  }
+
+  /* Smooth anchors */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

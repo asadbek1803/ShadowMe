@@ -1,0 +1,341 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — AI Tahlil{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // CSRF token helper
+    function getCsrfToken() {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') return decodeURIComponent(value);
+        }
+        return '';
+    }
+
+    // Show status message
+    function showStatus(elementId, message, isError = false, isLoading = false) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        if (isLoading) {
+            el.innerHTML = `<span style="color: var(--p3);">⏳ ${message}</span>`;
+        } else if (isError) {
+            el.innerHTML = `<span style="color: #ef4444;">❌ ${message}</span>`;
+        } else {
+            el.innerHTML = `<span style="color: #10b981;">✅ ${message}</span>`;
+        }
+    }
+
+    // YouTube URL submission
+    const youtubeInput = document.getElementById('youtube-url');
+    const btnYoutube = document.getElementById('btn-youtube-submit');
+
+    if (btnYoutube) {
+        btnYoutube.addEventListener('click', async () => {
+            const url = youtubeInput?.value?.trim();
+            if (!url) {
+                showStatus('youtube-status', 'YouTube havolasini kiriting', true);
+                return;
+            }
+
+            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+                showStatus('youtube-status', 'Faqat YouTube havolalari qabul qilinadi', true);
+                return;
+            }
+
+            showStatus('youtube-status', 'Video qo\'shilmoqda...', false, true);
+            btnYoutube.disabled = true;
+
+            try {
+                // Create transcript via API (no lesson_id needed for standalone transcripts)
+                const response = await fetch('/dashboard/api/transcript/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        youtube_url: url,
+                        language: '{{ study_lang|default:"en" }}'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Xato yuz berdi');
+                }
+
+                showStatus('youtube-status', `Video qo'shildi! Transkript: ${data.transcript_id}. Kutilmoqda...`);
+
+                // Poll for completion
+                pollTranscript(data.transcript_id);
+
+            } catch (error) {
+                showStatus('youtube-status', error.message, true);
+            } finally {
+                btnYoutube.disabled = false;
+            }
+        });
+    }
+
+    // Poll transcript status
+    async function pollTranscript(transcriptId) {
+        const maxAttempts = 360; // 30 minutes max
+        let attempts = 0;
+
+        async function check() {
+            try {
+                const response = await fetch(`/dashboard/api/transcript/${transcriptId}/`);
+                const data = await response.json();
+
+                if (data.status === 'ready') {
+                    showStatus('youtube-status', 'Transkript tayyor! Shadowing dashboardiga o\'tish...');
+                    setTimeout(() => window.location.href = '/dashboard/shadow/', 1500);
+                    return;
+                } else if (data.status === 'failed') {
+                    showStatus('youtube-status', `Xato: ${data.error_message || 'Noma\'lum xato'}`, true);
+                    return;
+                }
+
+                // Still processing
+                showStatus('youtube-status', `Tahlil qilinmoqda... (${data.status})`, false, true);
+
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(check, 5000);
+                } else {
+                    showStatus('youtube-status', 'Vaqt tugadi. Iltimos, keyinroq qayta urinib ko\'ring.', true);
+                }
+            } catch (error) {
+                showStatus('youtube-status', `Xato: ${error.message}`, true);
+            }
+        }
+
+        check();
+    }
+
+    // File upload - Drag and drop
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const btnFileSelect = document.getElementById('btn-file-select');
+
+    if (btnFileSelect && fileInput) {
+        btnFileSelect.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+    }
+
+    if (dropZone) {
+        // Click to select (only on empty space)
+        dropZone.addEventListener('click', (e) => {
+            if (e.target === dropZone || e.target.tagName === 'DIV' || e.target.tagName === 'H3' || e.target.tagName === 'P') {
+                fileInput?.click();
+            }
+        });
+
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.borderColor = 'var(--p3)';
+                dropZone.style.background = 'rgba(6,182,212,0.1)';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.borderColor = 'rgba(255,255,255,0.2)';
+                dropZone.style.background = 'rgba(0,0,0,0.2)';
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFiles);
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles({ target: { files } });
+    }
+
+    async function handleFiles(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const validTypes = ['video/mp4', 'video/x-matroska', 'audio/mpeg', 'audio/wav', 'audio/x-wav'];
+        if (!validTypes.includes(file.type) && !file.name.match(/\.(mp4|mkv|mp3|wav)$/i)) {
+            showStatus('upload-status', 'Noto\'g\'ri fayl formati. MP4, MKV, MP3, WAV qabul qilinadi.', true);
+            return;
+        }
+
+        // Validate size (100MB)
+        if (file.size > 100 * 1024 * 1024) {
+            showStatus('upload-status', 'Fayl hajmi 100MB dan katta. Kichikroq fayl tanlang.', true);
+            return;
+        }
+
+        showStatus('upload-status', 'Yuklanmoqda...', false, true);
+        document.getElementById('upload-progress').style.display = 'block';
+
+        try {
+            // Upload file to transcript API (no lesson_id needed for standalone transcripts)
+            const formData = new FormData();
+            formData.append('video_file', file);
+            formData.append('language', '{{ study_lang|default:"en" }}');
+
+            const response = await fetch('/dashboard/api/transcript/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Yuklashda xato yuz berdi');
+            }
+
+            showStatus('upload-status', `Fayl yuklandi! Transkript: ${data.transcript_id}. Tahlil boshlanmoqda...`);
+
+            // Poll for completion
+            pollTranscript(data.transcript_id);
+
+        } catch (error) {
+            showStatus('upload-status', `Xato: ${error.message}`, true);
+        } finally {
+            document.getElementById('upload-progress').style.display = 'none';
+        }
+    }
+
+    // Check for URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('uploaded')) {
+        showStatus('upload-status', `Fayl yuklandi: ${urlParams.get('filename')}. Endi transcript yaratish uchun lesson tanlang.`);
+    }
+});
+</script>
+{% endblock %}
+
+{% block main_content %}
+    <header class="page-header" style="margin-bottom: 24px;">
+        <div>
+            <h1 class="greeting" style="font-size: 28px;">AI Tahlil 🤖</h1>
+            <p class="greeting-sub">O'zingiz hohlagan video yoki audioni yuklang va talaffuzingizni tekshirtiring.</p>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <div class="left-col">
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">🔗</span> YouTube Havolasi
+                </div>
+                <div class="upload-area">
+                    <div class="url-input-wrap" style="padding: 10px;">
+                        <input type="url" class="url-input" id="youtube-url" placeholder="https://youtube.com/watch?v=..." required>
+                        <button class="btn-analyze" id="btn-youtube-submit" style="padding: 14px 28px;">Video qo'shish va Tahlil</button>
+                    </div>
+                    <div id="youtube-status" style="margin-top: 12px; font-size: 13px; min-height: 20px;"></div>
+                </div>
+
+                <div class="upload-divider" style="margin: 32px 0;">yoki</div>
+
+                <div class="card-title">
+                    <span class="icon">📁</span> Mahalliy Video/Audio
+                </div>
+                <div id="drop-zone" style="border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px; padding: 40px; text-align: center; background: rgba(0,0,0,0.2); transition: border-color 0.2s, background 0.2s;">
+                    <div style="font-size: 40px; margin-bottom: 16px;">☁️</div>
+                    <h3 style="margin-bottom: 8px;">Faylni bu yerga tashlang yoki tanlang</h3>
+                    <p style="color: var(--text-sec); font-size: 13px; margin-bottom: 24px;">MP4, MKV, MP3, WAV formatlari qo'llab-quvvatlanadi (Max 100MB)</p>
+                    <button class="local-upload-btn" id="btn-file-select" style="max-width: 250px; margin: 0 auto; background: rgba(255,255,255,0.1);">Fayl tanlash</button>
+                    <input type="file" id="file-input" accept="video/*,audio/*" style="display: none;">
+                </div>
+                <div id="upload-status" style="margin-top: 12px; font-size: 13px; min-height: 20px;"></div>
+                <div id="upload-progress" style="margin-top: 8px; display: none;">
+                    <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                        <div id="progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--p1), var(--p3)); transition: width 0.3s;"></div>
+                    </div>
+                    <div id="progress-text" style="margin-top: 4px; font-size: 12px; color: var(--text-sec);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="glass-card" style="height: 100%;">
+                <div class="card-title">
+                    <span class="icon">🕒</span> Tarix
+                </div>
+                <div class="rec-list">
+                    {% for record in analysis_records %}
+                    <div class="rec-item">
+                        <div class="rec-info">
+                            <div class="rec-title">{{ record.lesson.title|default:"Custom Video" }}</div>
+                            <div class="rec-meta">
+                                <span>{{ record.created_at|date:"d M Y, H:i" }}</span>
+                            </div>
+                        </div>
+                        <div style="font-weight: 800; font-size: 13px; color: {% if record.status == 'ready' %}#10b981{% elif record.status == 'failed' %}#ef4444{% else %}var(--gold){% endif %};">
+                            {% if record.status == 'ready' %}
+                                <a href="{% url 'study:lesson_player' record.lesson.id %}" style="color: inherit; text-decoration: none;">Tayyor ▶</a>
+                            {% elif record.status == 'pending' or record.status == 'processing' %}
+                                Jarayonda...
+                            {% else %}
+                                Xato
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--text-sec); font-size:13px; text-align:center;">Tahlillar tarixi bo'sh</p>
+                    {% endfor %}
+                </div>
+
+                {% if shadow_sessions %}
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <div class="card-title" style="margin-bottom: 16px;">
+                        <span class="icon">🎭</span> Shadowing sessiyalari
+                    </div>
+                    <div class="rec-list">
+                        {% for session in shadow_sessions %}
+                        <div class="rec-item">
+                            <div class="rec-thumb">
+                                <span>✅</span>
+                            </div>
+                            <div class="rec-info">
+                                <div class="rec-title">{{ session.lesson.title }}</div>
+                                <div class="rec-meta">
+                                    <span>{{ session.completed_at|date:"d M Y" }}</span> •
+                                    <span>{{ session.score|floatformat:0 }}%</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'study:lesson_player' session.lesson.id %}?session_id={{ session.id }}" class="btn-primary" style="padding: 8px 16px; font-size: 12px;">
+                                Ko'rish
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

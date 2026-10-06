@@ -1,0 +1,280 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — Tariflar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .pricing-header h1 {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .pricing-header p {
+        color: var(--text-sec);
+        font-size: 16px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .plan-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 32px 24px;
+        position: relative;
+        backdrop-filter: blur(16px);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-8px);
+    }
+
+    /* Free Plan */
+    .plan-card.free:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 12px 32px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Gold Plan */
+    .plan-card.gold {
+        background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0) 100%);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+    .plan-card.gold:hover {
+        border-color: rgba(245, 158, 11, 0.6);
+        box-shadow: 0 12px 32px rgba(245, 158, 11, 0.15);
+    }
+    
+    /* VIP Plan */
+    .plan-card.vip {
+        background: linear-gradient(180deg, rgba(124, 58, 237, 0.05) 0%, rgba(124, 58, 237, 0) 100%);
+        border-color: rgba(124, 58, 237, 0.3);
+    }
+    .plan-card.vip:hover {
+        border-color: rgba(124, 58, 237, 0.6);
+        box-shadow: 0 12px 32px rgba(124, 58, 237, 0.15);
+    }
+
+    .popular-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #000;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .plan-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .plan-price {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: #fff;
+    }
+
+    .plan-price span {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-sec);
+    }
+
+    .plan-desc {
+        font-size: 14px;
+        color: var(--text-sec);
+        margin-bottom: 24px;
+        min-height: 40px;
+    }
+
+    .features-list {
+        list-style: none;
+        margin-bottom: 32px;
+        flex: 1;
+    }
+
+    .features-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 14px;
+        color: var(--text-main);
+        margin-bottom: 16px;
+    }
+
+    .feature-icon {
+        color: #10b981;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .feature-icon.missing {
+        color: var(--text-mut);
+        opacity: 0.5;
+    }
+
+    .btn-select-plan {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, background 0.3s;
+    }
+
+    .btn-select-plan:hover {
+        transform: scale(1.02);
+    }
+
+    .btn-free {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    .btn-free:hover { background: rgba(255, 255, 255, 0.15); }
+
+    .btn-gold {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #000;
+    }
+
+    .btn-vip {
+        background: linear-gradient(135deg, var(--p1), var(--p2));
+        color: #fff;
+    }
+    
+    .current-plan-badge {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        cursor: default;
+    }
+
+    @media (max-width: 1024px) {
+        .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 768px) {
+        .pricing-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+    <div class="pricing-header">
+        <h1>O'zingizga mos tarifni tanlang</h1>
+        <p>Barcha tariflar sizning til o'rganish tezligingizni oshirishga qaratilgan.</p>
+    </div>
+
+    <div class="pricing-grid">
+        <!-- FREE PLAN -->
+        <div class="plan-card free">
+            <div class="plan-title">Free</div>
+            <div class="plan-price">0 UZS <span>/ oy</span></div>
+            <div class="plan-desc">Platforma bilan tanishish uchun boshlang'ich imkoniyatlar.</div>
+            
+            <ul class="features-list">
+                <li><span class="feature-icon">✓</span> Barcha bepul darslarga kirish</li>
+                <li><span class="feature-icon">✓</span> Kuniga 3 ta AI tahlil limiti</li>
+                <li><span class="feature-icon">✓</span> Asosiy statistika</li>
+                <li><span class="feature-icon missing">✕</span> Premium darslar</li>
+                <li><span class="feature-icon missing">✕</span> Cheksiz AI tahlil</li>
+            </ul>
+
+            {% if settings.plan == 'free' %}
+                <div class="current-plan-badge">Joriy tarif</div>
+            {% else %}
+                <form action="{% url 'study:upgrade_plan' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="free">
+                    <button type="submit" class="btn-select-plan btn-free">Tanlash</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- GOLD PLAN -->
+        <div class="plan-card gold">
+            <div class="popular-badge">Eng ommabop</div>
+            <div class="plan-title" style="color: var(--gold);">Gold</div>
+            <div class="plan-price">49 000 UZS <span>/ oy</span></div>
+            <div class="plan-desc">Jiddiy o'rganuvchilar uchun barcha premium kontent.</div>
+            
+            <ul class="features-list">
+                <li><span class="feature-icon">✓</span> Barcha bepul darslarga kirish</li>
+                <li><span class="feature-icon">✓</span> Kuniga 20 ta AI tahlil limiti</li>
+                <li><span class="feature-icon">✓</span> Murakkab statistika va analiz</li>
+                <li><span class="feature-icon">✓</span> Barcha Premium darslarga kirish</li>
+                <li><span class="feature-icon missing">✕</span> Cheksiz AI tahlil</li>
+            </ul>
+
+            {% if settings.plan == 'gold' %}
+                <div class="current-plan-badge">Joriy tarif</div>
+            {% else %}
+                <form action="{% url 'study:upgrade_plan' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="gold">
+                    <button type="submit" class="btn-select-plan btn-gold">Tanlash</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- VIP PLAN -->
+        <div class="plan-card vip">
+            <div class="plan-title" style="color: #a78bfa;">VIP</div>
+            <div class="plan-price">99 000 UZS <span>/ oy</span></div>
+            <div class="plan-desc">Cheklovlarsiz, to'liq ustunlikka ega bo'ling.</div>
+            
+            <ul class="features-list">
+                <li><span class="feature-icon">✓</span> Barcha bepul darslarga kirish</li>
+                <li><span class="feature-icon">✓</span> Cheksiz AI tahlil limiti</li>
+                <li><span class="feature-icon">✓</span> Murakkab statistika va analiz</li>
+                <li><span class="feature-icon">✓</span> Barcha Premium darslarga kirish</li>
+                <li><span class="feature-icon">✓</span> Yangi darslarga 1-bo'lib kirish</li>
+            </ul>
+
+            {% if settings.plan == 'vip' %}
+                <div class="current-plan-badge">Joriy tarif</div>
+            {% else %}
+                <form action="{% url 'study:upgrade_plan' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="vip">
+                    <button type="submit" class="btn-select-plan btn-vip">Tanlash</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

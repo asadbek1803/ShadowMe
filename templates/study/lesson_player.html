@@ -1,0 +1,341 @@
+{% extends 'study/base_dashboard.html' %}
+
+{% block title %}ShadowMe — Shadowing Player{% endblock %}
+
+{% block main_content %}
+<div class="shadow-player-container"
+     data-lesson-id="{{ lesson.id }}"
+     data-lesson-title="{{ lesson.title }}"
+     data-session-id="{% if session %}{{ session.id }}{% endif %}"
+     {% if transcript %}data-has-transcript="true"{% endif %}>
+    <!-- Header -->
+    <div class="player-header">
+        <button class="btn-back" onclick="goBack()">←</button>
+        <div class="lesson-info">
+            <h2 id="lesson-title">{{ lesson.title }}</h2>
+            <span id="step-badge" class="step-badge">1</span>
+        </div>
+        <div class="progress-ring">
+            <span id="progress-text">0%</span>
+        </div>
+    </div>
+
+    <!-- Video/Player Area -->
+    <div class="player-main">
+        <div class="video-wrapper" id="video-wrapper"
+             data-video-url="{{ video_url|default:'' }}"
+             data-source-type="{% if video_url and 'youtube' in video_url %}youtube{% else %}html5{% endif %}">
+            <!-- YouTube or HTML5 video goes here -->
+            <div id="player-placeholder" class="player-placeholder">
+                <div class="loading-spinner"></div>
+                <p>Yuklanmoqda...</p>
+            </div>
+        </div>
+
+        <!-- Karaoke Text Overlay -->
+        <div class="karaoke-overlay" id="karaoke-overlay">
+            <div id="karaoke-text" class="karaoke-text"></div>
+        </div>
+    </div>
+
+    <!-- Controls / UI based on step -->
+    <div class="player-controls" id="player-controls">
+        <!-- Step 1: Watch No Text -->
+        <div class="step-ui" id="step-1" style="display: none;">
+            <button class="btn-primary" onclick="advanceStep(2)">Ko'rdim, keyingisiga o'tish →</button>
+        </div>
+
+        <!-- Step 2: Watch With Text -->
+        <div class="step-ui" id="step-2" style="display: none;">
+            <button class="btn-primary" onclick="advanceStep(3)">Matn bilan ko'rdim →</button>
+        </div>
+
+        <!-- Step 3: Practice -->
+        <div class="step-ui" id="step-3" style="display: none;">
+            <div class="segment-info">
+                <span id="segment-current">Segment 1 / 1</span>
+                <button class="btn-play-segment" onclick="playCurrentSegment()">▶ Segmentni eshitish</button>
+            </div>
+            <div class="recorder-controls">
+                <button class="btn-record" id="btn-record" onclick="toggleRecording()">
+                    <span class="rec-icon"></span> Yozishni boshlash
+                </button>
+                <button class="btn-submit" id="btn-submit" onclick="submitRecording()" disabled>Yuborish</button>
+            </div>
+            <div class="recording-status" id="recording-status"></div>
+        </div>
+
+        <!-- Step 4: AI Analysis -->
+        <div class="step-ui" id="step-4" style="display: none;">
+            <div class="analysis-loading">
+                <div class="loading-spinner"></div>
+                <p>AI tahlil qilmoqda...</p>
+            </div>
+        </div>
+
+        <!-- Step 5: Feedback -->
+        <div class="step-ui" id="step-5" style="display: none;">
+            <div id="feedback-container"></div>
+            <div class="feedback-actions">
+                <button class="btn-primary" onclick="handleFeedbackAction()">Davom etish</button>
+            </div>
+        </div>
+
+        <!-- Step 6: Replay Errors -->
+        <div class="step-ui" id="step-6" style="display: none;">
+            <div class="replay-info">
+                <p>Xatolik bor qismlarni qayta takrorlang</p>
+            </div>
+            <button class="btn-primary" onclick="advanceStep(3)">Qayta takrorlash →</button>
+        </div>
+
+        <!-- Step 7: Completed -->
+        <div class="step-ui" id="step-7" style="display: none;">
+            <div class="completion-badge">
+                <div class="check-icon">✓</div>
+                <h3>Tabriklaymiz!</h3>
+                <p>Dars 100% tugallandi</p>
+                <div class="final-score" id="final-score">0%</div>
+            </div>
+            <a href="/dashboard/" class="btn-primary">Dashboardga qaytish</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.shadow-player-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.player-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-back {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.lesson-info {
+    display: flex; align-items: center; gap: 12px; flex: 1;
+}
+
+.lesson-info h2 { font-size: 20px; font-weight: 600; }
+
+.step-badge {
+    background: linear-gradient(135deg, var(--p1), var(--p3));
+    color: #fff; font-weight: 700; font-size: 13px;
+    padding: 4px 12px; border-radius: 8px;
+}
+
+.progress-ring {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: conic-gradient(var(--p3) 0%, rgba(255,255,255,0.05) 0%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    position: relative;
+}
+
+.progress-ring::before {
+    content: ''; position: absolute; inset: 4px;
+    background: var(--bg); border-radius: 50%;
+}
+
+#progress-text { position: relative; z-index: 1; }
+
+.player-main {
+    position: relative;
+    background: #000;
+    border-radius: var(--r2);
+    overflow: hidden;
+    aspect-ratio: 16/9;
+}
+
+.video-wrapper { width: 100%; height: 100%; position: relative; }
+.video-wrapper video, .video-wrapper iframe { width: 100%; height: 100%; object-fit: contain; }
+
+.player-placeholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; color: var(--text-sec);
+}
+
+.loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--p3);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.karaoke-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 40px 24px 24px;
+    pointer-events: none;
+}
+
+.karaoke-text {
+    font-size: 32px; font-weight: 700; text-align: center; line-height: 1.5;
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.segment-enter {
+    animation: fadeInSlideUp 0.3s ease-out forwards;
+}
+
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.karaoke-word {
+    transition: color 0.15s, opacity 0.15s, transform 0.15s;
+    opacity: 0.4;
+}
+
+.karaoke-word.active {
+    opacity: 1;
+    color: var(--gold);
+    text-shadow: 0 0 16px rgba(245,158,11,0.6);
+    transform: scale(1.1);
+}
+
+.karaoke-word.passed {
+    color: #34d399; /* lighter green for passed words */
+    opacity: 0.8;
+}
+
+.player-controls {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 24px;
+}
+
+.step-ui {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+
+.btn-primary {
+    padding: 14px 32px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, var(--p1), var(--p2));
+    color: #fff; font-weight: 600; font-size: 15px; cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-primary:hover { transform: scale(1.03); }
+
+.btn-play-segment {
+    padding: 10px 20px; border: 1px solid var(--p3); border-radius: 10px;
+    background: rgba(6,182,212,0.1); color: var(--p3); font-weight: 600; cursor: pointer;
+}
+
+.recorder-controls { display: flex; gap: 12px; }
+
+.btn-record {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 24px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
+    font-weight: 600; cursor: pointer; transition: transform 0.2s;
+}
+
+.btn-record:hover { transform: scale(1.02); }
+.btn-record.recording { animation: pulse 1.5s infinite; }
+
+.rec-icon {
+    width: 12px; height: 12px; border-radius: 50%; background: #fff;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.btn-submit {
+    padding: 14px 28px; border-radius: 12px; border: none;
+    background: rgba(255,255,255,0.1); color: var(--text-sec);
+    font-weight: 600; cursor: pointer;
+}
+
+.btn-submit:not(:disabled) {
+    background: linear-gradient(135deg, var(--p3), var(--p1));
+    color: #fff;
+}
+
+.recording-status { font-size: 13px; color: var(--text-sec); min-height: 20px; }
+
+.segment-info {
+    display: flex; align-items: center; gap: 16px;
+    font-size: 14px; color: var(--text-sec);
+}
+
+.analysis-loading {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    color: var(--text-sec); padding: 40px;
+}
+
+#feedback-container {
+    width: 100%; max-height: 300px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px;
+}
+
+.feedback-word {
+    padding: 12px 16px; border-radius: 10px;
+    background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.feedback-word.correct { border-color: rgba(16,185,129,0.3); }
+.feedback-word.mispronounced { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.05); }
+.feedback-word.omitted { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.05); }
+
+.word-status { font-size: 12px; font-weight: 600; }
+.word-status.correct { color: #10b981; }
+.word-status.mispronounced { color: #ef4444; }
+.word-status.omitted { color: #f59e0b; }
+
+.completion-badge {
+    text-align: center; padding: 40px;
+}
+
+.check-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #fff; font-size: 40px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.3);
+}
+
+.final-score { font-size: 48px; font-weight: 800; margin-top: 16px; color: var(--gold); }
+
+@media (max-width: 768px) {
+    .shadow-player-container { padding: 0; }
+    .karaoke-text { font-size: 18px; }
+    .recorder-controls { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="/static/js/shadow/app.js"></script>
+{% endblock %}
